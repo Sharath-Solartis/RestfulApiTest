@@ -32,8 +32,10 @@ public class BaseClass
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
 	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
 	{
+		
 		this.input = InputData;
 		sampleInput = new JsonHandle(config.getProperty("sample_request"));
+		
 	}
 
 //-----------------------------------------------------------PUMPING TEST DATA TO REQUEST--------------------------------------------------------------- 	
@@ -54,15 +56,19 @@ public class BaseClass
 //------------------------------------------------------------CONVERTING REQUEST TO STRING--------------------------------------------------------------	
 	public String RequestToString() throws IOException, ParseException, DocumentException
 	{
+		
 		return request.FileToString();
+		
 	}
 	
 //-------------------------------------------------------------ADDING HEADER || TOKENS------------------------------------------------------------------	
 	public void AddHeaders() throws IOException
 	{
+		
 		http = new HttpHandle(config.getProperty("test_url"),"POST");
 		http.AddHeader("Content-Type", config.getProperty("content_type"));
 		http.AddHeader("Token", config.getProperty("token"));
+		
 	}
 
 //------------------------------------------------------------STORING RESPONSE TO FOLDER----------------------------------------------------------------	
@@ -101,6 +107,7 @@ public class BaseClass
 		try 
 		{
 			response.StringToFile(response_string);
+			
 		} 
 		catch (IOException | DocumentException e) 
 		{
@@ -111,6 +118,7 @@ public class BaseClass
 //-------------------------------------------------------------CONVERTING RESPONSE TO STRING------------------------------------------------------------
 	public String ResponseToString() throws IOException, ParseException, DocumentException
 	{
+		
 		return response.FileToString();
 	}
 	

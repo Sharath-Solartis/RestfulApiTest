@@ -24,9 +24,8 @@ import apiPackage.IsoBopissue;
 import apiPackage.IsoBoprating;
 import apiPackage.SolartisIsoBopRating;
 import apiPackage.StarrSearchRescueIssueCertificate;
-
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+//import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
@@ -46,13 +45,13 @@ public class App
 	public static void main( String[] args ) 
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
-		PropertiesHandle config = new PropertiesHandle("E:/Automation Team/1 Projects/08 DTC/Release6/PreviewPDF/configuration_file/config_json.properties");
+		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/08 DTC/Release8/Rating/configuration_file/config_json_CFAR.properties");
 		try
 		{
 			logInfo.info("Connecting DataBase");
 			DatabaseOperation.ConnectionSetup(config);
 		} 
-		catch (ClassNotFoundException e) 
+		catch (ClassNotFoundException e)
 		{
 			logError.error("Failed DataBase Connection -- ClassNotFoundError");
 			e.printStackTrace();

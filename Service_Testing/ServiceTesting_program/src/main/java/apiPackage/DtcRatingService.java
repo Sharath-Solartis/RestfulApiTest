@@ -5,6 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
+
+import com.jayway.jsonpath.PathNotFoundException;
+
 import Supporting_Classes.DatabaseOperation;
 import Supporting_Classes.HttpHandle;
 import Supporting_Classes.JsonHandle;
@@ -27,6 +30,7 @@ public class DtcRatingService extends BaseClass implements API
 		inputColumnSize = inputColumnCol.length;	
 	}
 
+	
     @Override
 	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException
 	{
@@ -44,6 +48,7 @@ public class DtcRatingService extends BaseClass implements API
 		
 	}
 
+    
 	@Override
 	public void AddHeaders() throws IOException 
 	{
@@ -53,6 +58,7 @@ public class DtcRatingService extends BaseClass implements API
 		http.AddHeader("EventName", config.getProperty("EventName"));	
 	}
 
+	
 	@Override
 	public void SendAndReceiveData() throws SQLException
 	{
@@ -88,6 +94,7 @@ public class DtcRatingService extends BaseClass implements API
 		
 	}
 
+	
 	@Override
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output)
 			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException 
@@ -99,17 +106,25 @@ public class DtcRatingService extends BaseClass implements API
 			
 			if(StatusCode.equals("SUCCESS"))
 			{
+				try
+				{
 				String actual=null;
 				actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+				//System.out.println(actual);
 				output.WriteData(actualColumnCol[i], actual);
 				output.WriteData("Flag_for_execution", StatusCode);
+				}
+				catch(PathNotFoundException e)
+				{
+					output.WriteData(actualColumnCol[i], "Path not Found");
+				}
 				
 			}
 			else
 			{
 				//String MessageCode=(response.read("..messageCode").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
 				//String UserMessage=(response.read("..UserMessage").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				//output.WriteData("Flag_for_execution", "Error response");
+				output.WriteData("Flag_for_execution", StatusCode);
 				//output.WriteData("Message_code", MessageCode);
 				//output.WriteData("User_message", UserMessage);
 				
