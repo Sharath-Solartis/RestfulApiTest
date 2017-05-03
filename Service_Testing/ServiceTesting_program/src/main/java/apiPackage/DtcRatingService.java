@@ -3,8 +3,12 @@ package apiPackage;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
+
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
+
+import com.jayway.jsonpath.PathNotFoundException;
+
 import Supporting_Classes.DatabaseOperation;
 import Supporting_Classes.HttpHandle;
 import Supporting_Classes.JsonHandle;
@@ -99,10 +103,18 @@ public class DtcRatingService extends BaseClass implements API
 			
 			if(StatusCode.equals("SUCCESS"))
 			{
-				String actual=null;
-				actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				output.WriteData(actualColumnCol[i], actual);
-				output.WriteData("Flag_for_execution", StatusCode);
+				try
+				{
+					String actual=null;
+					actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+					output.WriteData(actualColumnCol[i], actual);
+					output.WriteData("Flag_for_execution", StatusCode);
+				}
+				catch(PathNotFoundException e)
+				{
+					output.WriteData(actualColumnCol[i], "Path Not Found");
+					
+				}
 				
 			}
 			else
