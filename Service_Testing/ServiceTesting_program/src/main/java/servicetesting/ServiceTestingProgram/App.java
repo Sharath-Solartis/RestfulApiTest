@@ -1,6 +1,6 @@
 package servicetesting.ServiceTestingProgram;
 
-import Supporting_Classes.DatabaseOperation;
+import util.common.DatabaseOperation;
 import apiPackage.API;
 import apiPackage.ChicForms;
 import apiPackage.ChicRating;
@@ -24,13 +24,11 @@ import apiPackage.IsoBopissue;
 import apiPackage.IsoBoprating;
 import apiPackage.SolartisIsoBopRating;
 import apiPackage.StarrSearchRescueIssueCertificate;
-
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
-import Supporting_Classes.PropertiesHandle;
+import util.common.PropertiesHandle;
 import org.apache.log4j.Logger;
 
 /**
@@ -46,8 +44,8 @@ public class App
 	public static void main( String[] args ) 
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
-		//PropertiesHandle config = new PropertiesHandle("Q:/Automation Team/1 Projects/09 ISO/Release_12/Endrosement/configuration_file/config_json.properties");
-		PropertiesHandle config = new PropertiesHandle(args[0]);
+		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/09 ISO/Release_14 -help/Rating/configuration_file/config_json.properties");
+		//PropertiesHandle config = new PropertiesHandle(args[0]);
 		
 		try                                      
 		{
@@ -67,6 +65,7 @@ public class App
 		String actualchoice = config.getProperty("actual");
 		String statuschoice = config.getProperty("status");
 		String outputtable = config.getProperty("output_in_same_table");
+		
 		DatabaseOperation input = new DatabaseOperation();
 		try 
 		{
@@ -78,6 +77,7 @@ public class App
 			logError.error("Failed Creating Instance for Input -- SQLError");
 			e1.printStackTrace();
 		}
+		
 		DatabaseOperation output = new DatabaseOperation();
 		try 
 		{
@@ -234,7 +234,7 @@ public class App
 							
 							if(input.ReadData("flag_for_execution").equals("Y"))
 							{
-								logInfo.info("TestData" + i + "flag_for_execution = Y" );	
+							    logInfo.info("TestData" + i + "flag_for_execution = Y" );	
 								
 									logInfo.info("Loading Sample Request for Testdata--" + i);
 									  api.LoadSampleRequest(input);//LOADING SAMPLE REQUEST
@@ -287,7 +287,7 @@ public class App
 									{
 										logError.error("Failed Rquest For Testdata--" + i + "---IOException | ParseException | DocumentException e1");
 										e1.printStackTrace();
-									}							
+									}						
 								
 								if(actualchoice.equals("Y"))
 								{

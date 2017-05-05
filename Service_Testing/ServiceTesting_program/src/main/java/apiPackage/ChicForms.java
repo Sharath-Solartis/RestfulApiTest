@@ -5,9 +5,8 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.PropertiesHandle;
-import Supporting_Classes.XmlHandle;
+import util.api.*;
+import util.common.*;
 
 public class ChicForms extends BaseClass implements API
 {	

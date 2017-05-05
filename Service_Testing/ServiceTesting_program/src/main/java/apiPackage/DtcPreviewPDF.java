@@ -2,9 +2,8 @@ package apiPackage;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.HttpHandle;
-import Supporting_Classes.PropertiesHandle;
+import util.api.*;
+import util.common.*;
 
 public class DtcPreviewPDF extends BaseClass implements API
 {

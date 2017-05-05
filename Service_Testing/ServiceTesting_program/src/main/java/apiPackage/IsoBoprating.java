@@ -1,8 +1,8 @@
 package apiPackage;
 
 import java.sql.SQLException;
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.PropertiesHandle;
+import util.common.DatabaseOperation;
+import util.common.PropertiesHandle;
 
 public class IsoBoprating extends BaseClass implements API 
 {

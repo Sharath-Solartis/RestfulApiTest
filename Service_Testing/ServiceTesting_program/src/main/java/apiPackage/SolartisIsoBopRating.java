@@ -1,8 +1,7 @@
 package apiPackage;
 
 import java.sql.SQLException;
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.PropertiesHandle;
+import util.common.*;
 
 public class SolartisIsoBopRating extends BaseClass implements API 
 {

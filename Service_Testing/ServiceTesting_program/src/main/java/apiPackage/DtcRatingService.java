@@ -3,18 +3,11 @@ package apiPackage;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
-
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
-
 import com.jayway.jsonpath.PathNotFoundException;
-
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.HttpHandle;
-import Supporting_Classes.JsonHandle;
-import Supporting_Classes.PropertiesHandle;
-
-
+import util.api.*;
+import util.common.*;
 
 public class DtcRatingService extends BaseClass implements API 
 {

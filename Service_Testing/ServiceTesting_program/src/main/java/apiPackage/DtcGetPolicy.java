@@ -5,10 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
-import Supporting_Classes.DatabaseOperation;
-import Supporting_Classes.HttpHandle;
-import Supporting_Classes.JsonHandle;
-import Supporting_Classes.PropertiesHandle;
+import util.api.*;
+import util.common.*;
+
 public class DtcGetPolicy extends BaseClass implements API
 {
 	public DtcGetPolicy(PropertiesHandle config) throws SQLException
