@@ -41,7 +41,7 @@ public class App
 	static Logger logInfo = Logger.getLogger("INFOlog");
 	static API api=null;
 	
-	public static void main( String[] args ) 
+	public static void main( String[] args ) throws ClassNotFoundException 
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
 		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/09 ISO/Release_14 -help/Rating/configuration_file/config_json.properties");

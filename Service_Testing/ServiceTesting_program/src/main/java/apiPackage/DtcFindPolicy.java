@@ -10,7 +10,7 @@ import util.common.*;
 public class DtcFindPolicy extends BaseClass implements API
 {
 	public DtcFindPolicy(PropertiesHandle config) throws SQLException
-	{
+	{ 
 		this.config=config;
 		jsonElements = new DatabaseOperation();
 		jsonElements.GetDataObjects(config.getProperty("json_query"));

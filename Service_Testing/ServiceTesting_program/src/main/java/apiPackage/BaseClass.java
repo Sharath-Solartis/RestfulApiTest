@@ -25,6 +25,8 @@ public class BaseClass
 	protected int actualColumnSize;
 	protected int inputColumnSize;
 	protected HttpHandle http = null;
+	protected DBColoumnVerify InputColVerify = null;
+	protected DBColoumnVerify OutputColVerify = null;
 	
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
 	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
@@ -34,18 +36,25 @@ public class BaseClass
 	}
 
 //-----------------------------------------------------------PUMPING TEST DATA TO REQUEST--------------------------------------------------------------- 	
-	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException
+	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, ClassNotFoundException
 	{
 		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+".json");
 		request.StringToFile(sampleInput.FileToString());
 		
-		for(int i=0;i<inputColumnSize;i++)
+		DBColoumnVerify.ConnectionSetup(config);
+		
+		do
 		{
-			if(!input.ReadData(inputColumnCol[i]).equals(""))
+			if(InputColVerify.DbCol(input))
 			{
-			request.write(jsonElements.ReadData(inputColumnCol[i]), input.ReadData(inputColumnCol[i]));
-			}
-		}
+				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				{
+					request.write(jsonElements.ReadData(config.getProperty("InputColumn")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+				}
+			}	
+		}while(InputColVerify.MoveForward());
+		
+		DBColoumnVerify.CloseConn();
 	}
 
 //------------------------------------------------------------CONVERTING REQUEST TO STRING--------------------------------------------------------------	
@@ -112,45 +121,64 @@ public class BaseClass
 	}
 	
 //-----------------------------------------------------------UPDATING RESPONSE DATA TO DATABASE---------------------------------------------------------	
-	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException
+	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, ClassNotFoundException
 	{
-		for(int i=0;i<actualColumnSize;i++)
+
+		DBColoumnVerify.ConnectionSetup(config);
+				
+		do 	
 		{
+				  
+		  if(OutputColVerify.DbCol(output))
+			{
 			try
-			{
-			String actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
-			output.WriteData(actualColumnCol[i], actual);
-			System.out.println(actual);
-			output.WriteData("flag_for_execution", "Completed");
+				{
+				String actual = (response.read(jsonElements.ReadData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+				output.WriteData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))), actual);
+				System.out.println(actual);
+				output.WriteData("flag_for_execution", "Completed");
+				}
+				catch(PathNotFoundException e)
+				{
+					output.WriteData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))), "Path not Found");
+				}
 			}
-			catch(PathNotFoundException e)
-			{
-				output.WriteData(actualColumnCol[i], "Path not Found");
-			}
-		}
+		}while(OutputColVerify.MoveForward());
+	
+		DBColoumnVerify.CloseConn();
+		
 	return output;
 	}
 
 //---------------------------------------------------------------COMAPRISION FUNCTION-------------------------------------------------------------------	
-	public DatabaseOperation CompareFunction(DatabaseOperation output) throws SQLException
+	public DatabaseOperation CompareFunction(DatabaseOperation output) throws SQLException, ClassNotFoundException
 	{
-		for(int i=0;i<statusColumnSize;i++)
-		{
-			String[] StatusIndividualColumn = statusColumnCol[i].split("-");
-			String ExpectedColumn = StatusIndividualColumn[0];
-			String ActualColumn = StatusIndividualColumn[1];
-			String StatusColumn = StatusIndividualColumn[2];
-			if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
-			{
-				output.WriteData(StatusColumn, "Pass");
-			}
-			else
-			{
-				output.WriteData(StatusColumn, "Fail");
-			}
-			
-		} return output;
+		DBColoumnVerify.ConnectionSetup(config);
 		
+		do 	
+		{
+				  
+		  if(OutputColVerify.DbCol(output))
+			{
+				//String[] StatusIndividualColumn = statusColumnCol[i].split("-");
+				String ExpectedColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("ExpectedColumn")));
+				String ActualColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+				String StatusColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("StatusColumn")));
+				if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
+				{
+					output.WriteData(StatusColumn, "Pass");
+				}
+				else
+				{
+					output.WriteData(StatusColumn, "Fail");
+				}
+				
+			}
+		 }while(OutputColVerify.MoveForward());
+			
+		  DBColoumnVerify.CloseConn(); 
+	
+	return output;
 	}
 	
 //-----------------------------------------------------PRIVATE FUNCTION FOR SUPPORTING COMPARISON FUNCTION---------------------------------------------------	
