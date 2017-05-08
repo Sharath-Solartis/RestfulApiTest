@@ -82,7 +82,7 @@ public class App
 		try 
 		{
 			logInfo.info("Creating Instance for Output");
-			output.GetDataObjects(config.getProperty("output_query"));
+			output.GetDataObjects(config.getProperty("output_query"));	
 		} 
 		catch (SQLException e1) 
 		{
@@ -230,8 +230,7 @@ public class App
 				do
 				{
 					logInfo.info("TestData" + i + "Running" );
-					System.out.println("TestData : " + i);  
-							
+					System.out.println("TestData : " + i);  	
 							if(input.ReadData("flag_for_execution").equals("Y"))
 							{
 							    logInfo.info("TestData" + i + "flag_for_execution = Y" );	

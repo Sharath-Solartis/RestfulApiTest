@@ -69,7 +69,7 @@ public class DBColoumnVerify extends DatabaseOperation
 											{
 												ConditionReading=true;
 											}
-											break;
+											break;		
 								}
 							}
 							

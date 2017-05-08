@@ -18,15 +18,10 @@ public class BaseClass
 	protected DatabaseOperation jsonElements = null;
 	protected PropertiesHandle config = null;
 	protected DatabaseOperation input = null;
-	protected String[] actualColumnCol = null;
-	protected String[] inputColumnCol = null;
-	protected String[] statusColumnCol = null;
-	protected int statusColumnSize;
-	protected int actualColumnSize;
-	protected int inputColumnSize;
 	protected HttpHandle http = null;
 	protected DBColoumnVerify InputColVerify = null;
 	protected DBColoumnVerify OutputColVerify = null;
+	protected DBColoumnVerify StatusColVerify = null;
 	
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
 	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
@@ -38,10 +33,10 @@ public class BaseClass
 //-----------------------------------------------------------PUMPING TEST DATA TO REQUEST--------------------------------------------------------------- 	
 	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, ClassNotFoundException
 	{
+		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
 		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+".json");
 		request.StringToFile(sampleInput.FileToString());
 		
-		DBColoumnVerify.ConnectionSetup(config);
 		
 		do
 		{
@@ -49,12 +44,12 @@ public class BaseClass
 			{
 				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
 				{
-					request.write(jsonElements.ReadData(config.getProperty("InputColumn")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+					request.write(jsonElements.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
 				}
 			}	
 		}while(InputColVerify.MoveForward());
 		
-		DBColoumnVerify.CloseConn();
+		
 	}
 
 //------------------------------------------------------------CONVERTING REQUEST TO STRING--------------------------------------------------------------	
@@ -103,7 +98,7 @@ public class BaseClass
 			
 			e.printStackTrace();
 		}
-		response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+".json");
+		response = new JsonHandle(config.getProperty("response_location")+"a.json");
 		try 
 		{
 			response.StringToFile(response_string);
@@ -123,18 +118,16 @@ public class BaseClass
 //-----------------------------------------------------------UPDATING RESPONSE DATA TO DATABASE---------------------------------------------------------	
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, ClassNotFoundException
 	{
-
-		DBColoumnVerify.ConnectionSetup(config);
-				
+		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
 		do 	
 		{
-				  
-		  if(OutputColVerify.DbCol(output))
+		  if(OutputColVerify.DbCol(input))
 			{
 			try
 				{
-				String actual = (response.read(jsonElements.ReadData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
-				output.WriteData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))), actual);
+				System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+				String actual = (response.read(jsonElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+				output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
 				System.out.println(actual);
 				output.WriteData("flag_for_execution", "Completed");
 				}
@@ -145,25 +138,21 @@ public class BaseClass
 			}
 		}while(OutputColVerify.MoveForward());
 	
-		DBColoumnVerify.CloseConn();
 		
 	return output;
 	}
 
 //---------------------------------------------------------------COMAPRISION FUNCTION-------------------------------------------------------------------	
 	public DatabaseOperation CompareFunction(DatabaseOperation output) throws SQLException, ClassNotFoundException
-	{
-		DBColoumnVerify.ConnectionSetup(config);
-		
+	{		
+		StatusColVerify.GetDataObjects(config.getProperty("OutputColQuery"));
 		do 	
-		{
-				  
-		  if(OutputColVerify.DbCol(output))
+		{	
+		  if(StatusColVerify.DbCol(input))
 			{
-				//String[] StatusIndividualColumn = statusColumnCol[i].split("-");
-				String ExpectedColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("ExpectedColumn")));
-				String ActualColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
-				String StatusColumn = output.ReadData(OutputColVerify.ReadData(config.getProperty("StatusColumn")));
+				String ExpectedColumn = StatusColVerify.ReadData(config.getProperty("ExpectedColumn"));
+				String ActualColumn = StatusColVerify.ReadData(config.getProperty("OutputColumn"));
+				String StatusColumn = StatusColVerify.ReadData(config.getProperty("StatusColumn"));
 				if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
 				{
 					output.WriteData(StatusColumn, "Pass");
@@ -174,10 +163,8 @@ public class BaseClass
 				}
 				
 			}
-		 }while(OutputColVerify.MoveForward());
-			
-		  DBColoumnVerify.CloseConn(); 
-	
+		 }while(StatusColVerify.MoveForward());
+
 	return output;
 	}
 	
