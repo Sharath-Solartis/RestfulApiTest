@@ -98,7 +98,7 @@ public class BaseClass
 			
 			e.printStackTrace();
 		}
-		response = new JsonHandle(config.getProperty("response_location")+"a.json");
+		response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+".json");
 		try 
 		{
 			response.StringToFile(response_string);
