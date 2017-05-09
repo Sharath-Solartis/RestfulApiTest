@@ -35,8 +35,18 @@ public class DBColoumnVerify extends DatabaseOperation
 						ConditionReading=false;
 						String[] CondValue = new String[10];
 						String operator = null;
-						 
-							if(splits[i].contains("="))
+					
+							if(splits[i].contains(">="))
+							{
+								CondValue=splits[i].split(">=");
+								operator = ">=";
+							}
+							else if(splits[i].contains("<="))
+							{
+								CondValue=splits[i].split("<=");
+								operator = "<=";
+							}
+							else if(splits[i].contains("="))
 							{
 								CondValue=splits[i].split("=");
 								operator = "=";
@@ -46,6 +56,17 @@ public class DBColoumnVerify extends DatabaseOperation
 								CondValue=splits[i].split("<>");
 								operator = "<>";
 							}
+							else if(splits[i].contains(">"))
+							{
+								CondValue=splits[i].split(">");
+								operator = ">";
+							}
+							else if(splits[i].contains("<"))
+							{
+								CondValue=splits[i].split("<");
+								operator = "<";
+							}
+							
 							
 						String cond=CondValue[0];
 						String value=CondValue[1];
@@ -69,8 +90,49 @@ public class DBColoumnVerify extends DatabaseOperation
 											{
 												ConditionReading=true;
 											}
-											break;		
+											break;	
+								case ">": if(Integer.parseInt(DataTable.ReadData(cond)) > Integer.parseInt(individualValue[j]))
+											{
+												ConditionReading=true;
+						 						return ConditionReading;
+											}
+											else
+											{
+												ConditionReading=false;
+											}
+											break;	
+								case "<": if(Integer.parseInt(DataTable.ReadData(cond)) < Integer.parseInt(individualValue[j]))
+											{
+												ConditionReading=true;
+						 						return ConditionReading;
+											}
+											else
+											{
+												ConditionReading=false;
+											}
+											break;
+								case ">=": if(Integer.parseInt(DataTable.ReadData(cond)) >= Integer.parseInt(individualValue[j]))
+											{
+												ConditionReading=true;
+						 						return ConditionReading;
+											}
+											else
+											{
+												ConditionReading=false;
+											}
+											break;
+								case "<=": if(Integer.parseInt(DataTable.ReadData(cond)) <= Integer.parseInt(individualValue[j]))
+											{
+												ConditionReading=true;
+						 						return ConditionReading;
+											}
+											else
+											{
+												ConditionReading=false;
+											}
+											break;
 								}
+								
 							}
 							
 						if(!ConditionReading)
