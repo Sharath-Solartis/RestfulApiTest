@@ -133,7 +133,7 @@ public class BaseClass
 				}
 				catch(PathNotFoundException e)
 				{
-					output.WriteData(output.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn"))), "Path not Found");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
 				}
 			}
 		}while(OutputColVerify.MoveForward());
