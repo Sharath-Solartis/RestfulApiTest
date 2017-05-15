@@ -15,10 +15,9 @@ public class DtcPayIssue extends BaseClass implements API
 		this.config = config;
 		jsonElements = new DatabaseOperation();
 		jsonElements.GetDataObjects(config.getProperty("json_query"));
-		actualColumnCol = config.getProperty("actual_column").split(";");
-		inputColumnCol = config.getProperty("input_column").split(";");
-		actualColumnSize = actualColumnCol.length;
-		inputColumnSize = inputColumnCol.length;
+		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
+		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
+		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
 	}
 	
 	@Override
@@ -35,37 +34,40 @@ public class DtcPayIssue extends BaseClass implements API
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output)
 			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException
 	{
-     String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-		
-		for(int i=0;i<actualColumnSize;i++)
-		{
-			
-			if(StatusCode.equals("SUCCESS"))
-			{
-				try
+		String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
+	do 	
+	{
+	if(OutputColVerify.DbCol(input))
+	{
+		 try
+	      {	
+				if(StatusCode.equals("SUCCESS"))
 				{
-					String actual=null;
-					actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-					output.WriteData(actualColumnCol[i], actual);
+					System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+					String actual = (response.read(jsonElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+					System.out.println(actual);
 					output.WriteData("Flag_for_execution", StatusCode);
+					
 				}
-				catch(PathNotFoundException e)
+				else
 				{
-					output.WriteData(actualColumnCol[i], "Path not Found");
+					String MessageCode=(response.read("..messageCode").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+					String UserMessage=(response.read("..UserMessage").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+					output.WriteData("Flag_for_execution", "Error response");
+					output.WriteData("Message_code", MessageCode);
+					output.WriteData("User_message", UserMessage);
+					
 				}
-				
-			}
-			else
-			{
-				String MessageCode=(response.read("..messageCode").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				String UserMessage=(response.read("..UserMessage").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				output.WriteData("Flag_for_execution", "Error response");
-				output.WriteData("Message_code", MessageCode);
-				output.WriteData("User_message", UserMessage);
-				
-			}
+	      }
+		catch(PathNotFoundException e)
+		{
+			output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
 		}
-		return output;
-		
-	}
+		}
+	}while(OutputColVerify.MoveForward());
+
+			return output;	
+		}
 }

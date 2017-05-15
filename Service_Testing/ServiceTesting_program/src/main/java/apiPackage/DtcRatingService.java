@@ -16,28 +16,28 @@ public class DtcRatingService extends BaseClass implements API
 		this.config = config;
 		jsonElements = new DatabaseOperation();
 		jsonElements.GetDataObjects(config.getProperty("json_query"));
-		actualColumnCol = config.getProperty("actual_column").split(";");
-		inputColumnCol = config.getProperty("input_column").split(";");
-		statusColumnCol = config.getProperty("status_column").split(";");
-		statusColumnSize = statusColumnCol.length;
-		actualColumnSize = actualColumnCol.length;
-		inputColumnSize = inputColumnCol.length;	
+		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
+		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
+		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
 	}
 
     @Override
 	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException
 	{
+    	InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
 		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("State_code")+"_"+input.ReadData("Plan_name")+".json");
 		request.StringToFile(sampleInput.FileToString());
 		
-		for(int i=0;i<inputColumnSize;i++)
+		do
 		{
-			System.out.println(input.ReadData(inputColumnCol[i]));
-			if(!input.ReadData(inputColumnCol[i]).equals(""))
+			if(InputColVerify.DbCol(input))
 			{
-			request.write(jsonElements.ReadData(inputColumnCol[i]), input.ReadData(inputColumnCol[i]));
-			}
-		}
+				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				{
+					request.write(jsonElements.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+				}
+			}	
+		}while(InputColVerify.MoveForward());
 		
 	}
 
@@ -90,22 +90,23 @@ public class DtcRatingService extends BaseClass implements API
 			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException 
 	{
      String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-		
-		for(int i=0;i<actualColumnSize;i++)
+ 	do 	
+	{
+	  if(OutputColVerify.DbCol(input))
 		{
-			
 			if(StatusCode.equals("SUCCESS"))
 			{
 				try
 				{
-					String actual=null;
-					actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-					output.WriteData(actualColumnCol[i], actual);
+					
+					String actual = (response.read(jsonElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+					System.out.println(actual);
 					output.WriteData("Flag_for_execution", StatusCode);
 				}
 				catch(PathNotFoundException e)
 				{
-					output.WriteData(actualColumnCol[i], "Path Not Found");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
 					
 				}
 				
@@ -120,6 +121,7 @@ public class DtcRatingService extends BaseClass implements API
 				
 			}
 		}
+	}while(OutputColVerify.MoveForward());
 		return output;
 		
 	}

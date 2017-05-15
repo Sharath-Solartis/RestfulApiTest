@@ -16,10 +16,9 @@ public class DtcSaveDetails4 extends BaseClass implements API
 		this.config = config;
 		jsonElements = new DatabaseOperation();
 		jsonElements.GetDataObjects(config.getProperty("json_query"));
-		actualColumnCol = config.getProperty("actual_column").split(";");
-		inputColumnCol = config.getProperty("input_column").split(";");
-		actualColumnSize = actualColumnCol.length;
-		inputColumnSize = inputColumnCol.length;
+		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
+		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
+		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
 	}
 	
 	@Override
@@ -29,7 +28,7 @@ public class DtcSaveDetails4 extends BaseClass implements API
 		input = InputData;
 		switch(InputData.ReadData("Plan_name"))
 		{
-		 case "Annual Plan":			sampleInput = new JsonHandle(config.getProperty("Sample_request_anual"));
+		 case "Annual":			sampleInput = new JsonHandle(config.getProperty("Sample_request_anual"));
 		 									break;
 		 case "Single Trip":			sampleInput = new JsonHandle(config.getProperty("sample_request_tripplans"));
 											break;
@@ -43,16 +42,23 @@ public class DtcSaveDetails4 extends BaseClass implements API
 	@Override
 	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException
 	{
-		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("State1")+"_"+input.ReadData("Plan_name")+".json");
+		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
+		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("StateCode1")+"_"+input.ReadData("Plan_name")+".json");
 		request.StringToFile(sampleInput.FileToString());
 		
-		for(int i=0;i<inputColumnSize;i++)
+		do
 		{
-			if(!input.ReadData(inputColumnCol[i]).equals(""))
+			if(InputColVerify.DbCol(input))
 			{
-			request.write(jsonElements.ReadData(inputColumnCol[i]), input.ReadData(inputColumnCol[i]));
-			}
-		}
+				//System.out.println(config.getProperty("InputColumn"));
+				//System.out.println(InputColVerify.ReadData(config.getProperty("InputColumn")));
+				//System.out.println(input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				{
+					request.write(jsonElements.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+				}
+			}	
+		}while(InputColVerify.MoveForward());
 	}
 	
 	@Override
@@ -89,7 +95,7 @@ public class DtcSaveDetails4 extends BaseClass implements API
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response_"+input.ReadData("State1")+"_"+input.ReadData("Plan_name")+".json");
+		response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response_"+input.ReadData("StateCode1")+"_"+input.ReadData("Plan_name")+".json");
 		try {
 			response.StringToFile(response_string);
 		} catch (IOException | DocumentException e) {
@@ -102,36 +108,40 @@ public class DtcSaveDetails4 extends BaseClass implements API
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output)
 			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException
 	{
-         String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-		
-		for(int i=0;i<actualColumnSize;i++)
-		{
-			
-			if(StatusCode.equals("SUCCESS"))
-			{
-				try
+		String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
+	do 	
+	{
+	if(OutputColVerify.DbCol(input))
+	{
+		 try
+	      {	
+				if(StatusCode.equals("SUCCESS"))
 				{
-					String actual=null;
-					actual = (response.read(jsonElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-					output.WriteData(actualColumnCol[i], actual);
+					System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+					String actual = (response.read(jsonElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+					System.out.println(actual);
 					output.WriteData("Flag_for_execution", StatusCode);
+					
 				}
-				catch(PathNotFoundException e)
+				else
 				{
-					output.WriteData(actualColumnCol[i], "Path not Found");
+					String MessageCode=(response.read("..messageCode").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+					String UserMessage=(response.read("..UserMessage").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+					output.WriteData("Flag_for_execution", "Error response");
+					output.WriteData("Message_code", MessageCode);
+					output.WriteData("User_message", UserMessage);
+					
 				}
-			}
-			else
-			{
-				String MessageCode=(response.read("..messageCode").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				String UserMessage=(response.read("..UserMessage").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-				output.WriteData("Flag_for_execution", "Error response");
-				output.WriteData("Message_code", MessageCode);
-				output.WriteData("User_message", UserMessage);
-				
-			}
+	      }
+		catch(PathNotFoundException e)
+		{
+			output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
 		}
-		output.UpdateRow();
-		return output;
-	}
+		}
+	}while(OutputColVerify.MoveForward());
+
+			return output;	
+		}
 }

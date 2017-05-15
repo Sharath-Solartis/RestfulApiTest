@@ -153,13 +153,16 @@ public class BaseClass
 				String ExpectedColumn = StatusColVerify.ReadData(config.getProperty("ExpectedColumn"));
 				String ActualColumn = StatusColVerify.ReadData(config.getProperty("OutputColumn"));
 				String StatusColumn = StatusColVerify.ReadData(config.getProperty("StatusColumn"));
-				if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
+				if(!(StatusColumn.equals("")) && !(ExpectedColumn.equals("")))
 				{
-					output.WriteData(StatusColumn, "Pass");
-				}
-				else
-				{
-					output.WriteData(StatusColumn, "Fail");
+					if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
+					{
+						output.WriteData(StatusColumn, "Pass");
+					}
+					else
+					{
+						output.WriteData(StatusColumn, "Fail");
+					}
 				}
 				
 			}

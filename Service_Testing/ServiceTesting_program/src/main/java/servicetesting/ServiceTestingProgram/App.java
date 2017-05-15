@@ -4,12 +4,14 @@ import util.common.DatabaseOperation;
 import apiPackage.API;
 import apiPackage.ChicForms;
 import apiPackage.ChicRating;
+import apiPackage.DtcCancel;
 import apiPackage.DtcFindPolicy;
 import apiPackage.DtcGetCustomerDetails;
 import apiPackage.DtcGetPolicy;
 import apiPackage.DtcPayIssue;
 import apiPackage.DtcPreviewPDF;
 import apiPackage.DtcRatingService;
+import apiPackage.DtcRatingServiceEnhancement;
 import apiPackage.DtcSaveDetails1;
 import apiPackage.DtcSaveDetails2;
 import apiPackage.DtcSaveDetails3;
@@ -44,7 +46,7 @@ public class App
 	public static void main( String[] args ) throws ClassNotFoundException 
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
-		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/09 ISO/Release_7 - help/RateCancel/configuration_file/config_json.properties");
+		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/08 DTC/CheckingMigration/RatingEnhancement/configuration_file/config_jsonRatingNew.properties");
 		//PropertiesHandle config = new PropertiesHandle(args[0]);
 		
 		try                                      
@@ -182,7 +184,12 @@ public class App
         	   logInfo.info("IsoBopQuote API Selected");
   	           api = new DtcRatingService(config);
   	           break;
-  	        
+  	              
+          case "dtcratingserviceenhancement":               
+        	  logInfo.info("IsoBopQuote API Selected");
+ 	           api = new DtcRatingServiceEnhancement(config);
+ 	           break;
+        	   	  
           case "dtcsavedetails1":
         	    logInfo.info("IsoBopQuote API Selected");
   	            api = new DtcSaveDetails1(config);
@@ -207,6 +214,11 @@ public class App
         	    logInfo.info("IsoBopQuote API Selected");
   	            api = new StarrSearchRescueIssueCertificate(config);
   	            break;
+  	            
+          case "dtccancelpolicy":
+      	    logInfo.info("IsoBopQuote API Selected");
+	            api = new DtcCancel(config);
+	            break;      
     	        
           default :
         	     logError.error("API Selected is Wrong");

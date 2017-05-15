@@ -5,6 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
+
+import com.jayway.jsonpath.PathNotFoundException;
+
 import util.api.*;
 import util.common.*;
 public class ChicRating extends BaseClass implements API
@@ -15,10 +18,9 @@ public class ChicRating extends BaseClass implements API
 		this.config = config;
 		XmlElements = new DatabaseOperation();
 		XmlElements.GetDataObjects(config.getProperty("json_query"));
-		actualColumnCol = config.getProperty("actual_column").split(";");
-		inputColumnCol = config.getProperty("input_column").split(";");
-		actualColumnSize = actualColumnCol.length;
-		inputColumnSize = inputColumnCol.length;
+		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
+		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
+		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
 	}
 	
 	@Override
@@ -32,16 +34,20 @@ public class ChicRating extends BaseClass implements API
 	@Override
 	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException 
 	{
+		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
 		request = new XmlHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request"+".xml");
 		request.StringToFile(sampleInput.FileToString());
 		
-		for(int i=0;i<inputColumnSize;i++)
+		do
 		{
-			if(!input.ReadData(inputColumnCol[i]).equals(""))
+			if(InputColVerify.DbCol(input))
 			{
-			request.write(XmlElements.ReadData(inputColumnCol[i]), input.ReadData(inputColumnCol[i]));
-			}
-		}
+				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				{
+					request.write(jsonElements.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+				}
+			}	
+		}while(InputColVerify.MoveForward());
 		
 	}
 
@@ -85,16 +91,24 @@ public class ChicRating extends BaseClass implements API
 			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException
 	{
   
-		
-		for(int i=0;i<actualColumnSize;i++)
+		do 	
 		{
+		if(OutputColVerify.DbCol(input))
+		{
+			 try
+		      {	
 			
-			String actual = (response.read(XmlElements.ReadData(actualColumnCol[i])).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
-			output.WriteData(actualColumnCol[i], actual);
-		
-			
-		}
-		return output;
+			String actual = (response.read(XmlElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
+			output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+		      }
+				catch(PathNotFoundException e)
+				{
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
+				}
+				}
+			}while(OutputColVerify.MoveForward());
+
+			return output;	
 		
 	}
 }
