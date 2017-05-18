@@ -49,7 +49,7 @@ public class DtcGetCustomerDetails  extends BaseClass implements API
 					String actual = (response.read(jsonElements.ReadData(OutputColVerify.ReadData(config.getProperty("OutputColumn")))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
 					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
 					System.out.println(actual);
-					output.WriteData("Flag_for_execution", StatusCode);
+					output.WriteData("Flag_for_execution",StatusCode);
 					
 				}
 				else

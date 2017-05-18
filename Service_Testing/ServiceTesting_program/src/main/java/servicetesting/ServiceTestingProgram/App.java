@@ -46,7 +46,7 @@ public class App
 	public static void main( String[] args ) throws ClassNotFoundException 
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
-		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/08 DTC/CheckingMigration/RatingEnhancement/configuration_file/config_jsonRatingNew.properties");
+		PropertiesHandle config = new PropertiesHandle("A:/1 Projects/09 ISO/Release_27/Rating/configuration_file/config_json.properties");
 		//PropertiesHandle config = new PropertiesHandle(args[0]);
 		
 		try                                      

@@ -13,7 +13,9 @@ public class DBColoumnVerify extends DatabaseOperation
 	}
 	public boolean DbCol(DatabaseOperation DataTable) throws SQLException
 	{
+		
 		return ConditionReading(this.rs.getString(CondColName),DataTable);
+		
 	}
 
 	protected boolean ConditionReading(String condition,DatabaseOperation DataTable) throws SQLException
