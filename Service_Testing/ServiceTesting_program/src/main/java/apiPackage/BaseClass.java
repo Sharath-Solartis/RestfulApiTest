@@ -3,9 +3,14 @@ package apiPackage;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
+
+import jxl.read.biff.BiffException;
+
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
+
 import com.jayway.jsonpath.PathNotFoundException;
+
 import util.api.*;
 import util.common.*;
 import Configuration.PropertiesHandle;
@@ -19,20 +24,21 @@ public class BaseClass
 	protected DatabaseOperation jsonElements = null;
 	protected PropertiesHandle config = null;
 	protected DatabaseOperation input = null;
+	protected DatabaseOperation output = null;
 	protected HttpHandle http = null;
 	protected DBColoumnVerify InputColVerify = null;
 	protected DBColoumnVerify OutputColVerify = null;
 	protected DBColoumnVerify StatusColVerify = null;
 	
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
-	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
+	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException, BiffException, IOException
 	{
 		this.input = InputData;
 		sampleInput = new JsonHandle(config.getProperty("sample_request") + "request.json");
 	}
 
 //-----------------------------------------------------------PUMPING TEST DATA TO REQUEST--------------------------------------------------------------- 	
-	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, ClassNotFoundException
+	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, ClassNotFoundException,NumberFormatException, java.text.ParseException, BiffException 
 	{
 		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
 		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+".json");
@@ -117,8 +123,9 @@ public class BaseClass
 	}
 	
 //-----------------------------------------------------------UPDATING RESPONSE DATA TO DATABASE---------------------------------------------------------	
-	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, ClassNotFoundException
+	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, ClassNotFoundException,NumberFormatException, java.text.ParseException
 	{
+		this.output=output;
 		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
 		do 	
 		{

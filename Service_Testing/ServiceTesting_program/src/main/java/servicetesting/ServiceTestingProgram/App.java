@@ -34,6 +34,8 @@ import apiPackage.StarrSearchRescueIssueCertificate;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import jxl.read.biff.BiffException;
+
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
 
@@ -56,7 +58,7 @@ public class App
     {   
 		System.setProperty("jsse.enableSNIExtension", "false");
 		
-		PropertiesHandle config = new PropertiesHandle(args[0], args[1], args[2], args[3]);
+		PropertiesHandle config = new PropertiesHandle(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 		
 		try                                      
 		{
@@ -278,16 +280,23 @@ public class App
 							if(input.ReadData("flag_for_execution").equals("Y"))
 							{
 							    logInfo.info("TestData" + input.ReadData("S.No") + "flag_for_execution = Y" );	
-								
+								try
+								{
 									logInfo.info("Loading Sample Request for Testdata--" + input.ReadData("S.No"));
-									  api.LoadSampleRequest(input);//LOADING SAMPLE REQUEST
-					
+									
+									api.LoadSampleRequest(input);//LOADING SAMPLE REQUEST
+								}
+								catch (SQLException| BiffException| IOException e)
+								{
+									logError.error("Failed to Load Sample; Testdata--" + input.ReadData("S.No") + "To Sample Request---SQLException | BiffException | IOException");
+									e.printStackTrace();
+								}
 								try 
 								{
 									logInfo.info("Pumping Testdata--" + input.ReadData("S.No") + "To Sample Request");
 								      api.PumpDataToRequest();//PUMPING TESTDATA TO SAMPLEREQUEST 
 								} 
-								catch (IOException | DocumentException | ParseException e)
+								catch (IOException | DocumentException | ParseException |NumberFormatException | java.text.ParseException |BiffException e)
 								{
 									logError.error("Failed Pumping Testdata--" + input.ReadData("S.No") + "To Sample Request---IOException | DocumentException | ParseException");
 									e.printStackTrace();
@@ -341,7 +350,7 @@ public class App
 										logInfo.info("Storing Response--" + input.ReadData("S.No") + "Data into DB");
 										input = api.SendResponseDataToFile(input);//FETCHING DATA FROM RESPONSE AND STORE THEM INTO THE DATABASE TABLE
 								} 
-								catch (IOException | ParseException | DocumentException e) 
+								catch (IOException | ParseException | DocumentException | NumberFormatException| java.text.ParseException e) 
 								{
 										 logError.error("Failed Storing Response--" + input.ReadData("S.No") + "Data into DB---IOException | ParseException | DocumentException e");
 										 e.printStackTrace();
@@ -357,7 +366,7 @@ public class App
 										logInfo.info("Storing Response--" + input.ReadData("S.No") + "Data into DB");
 										output = api.SendResponseDataToFile(output);//FETCHING DATA FROM RESPONSE AND STORE THEM INTO THE DATABASE TABLE
 								} 
-								catch (IOException | ParseException | DocumentException e) 
+								catch (IOException | ParseException | DocumentException |NumberFormatException | java.text.ParseException e) 
 							    {
 										 logError.error("Failed Storing Response--" + input.ReadData("S.No") + "Data into DB---IOException | ParseException | DocumentException e");
 										 e.printStackTrace();
