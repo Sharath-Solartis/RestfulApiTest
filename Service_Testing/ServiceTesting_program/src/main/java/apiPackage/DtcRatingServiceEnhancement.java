@@ -3,17 +3,27 @@ package apiPackage;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
+
+import jxl.read.biff.BiffException;
+import macroPackage.DtcMacro;
+import macroPackage.IsoMacro;
+import macroPackage.MacroInterface;
+
 import org.dom4j.DocumentException;
 import org.json.simple.parser.ParseException;
+
 import util.api.*;
 import util.common.*;
+
 import com.jayway.jsonpath.PathNotFoundException;
+
 import Configuration.PropertiesHandle;
 
 public class DtcRatingServiceEnhancement extends BaseClass implements API 
 {
  protected String Planname[] = null;
  protected String Plancode[] = null;
+ MacroInterface macro = null;
  public DtcRatingServiceEnhancement(PropertiesHandle config) throws SQLException
  {
   this.config = config;
@@ -22,13 +32,15 @@ public class DtcRatingServiceEnhancement extends BaseClass implements API
      InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
 	OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
 	StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
+	macro=new DtcMacro(config);	
  }
  
  @Override
- public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
+ public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException, BiffException, IOException
  {
   this.input = InputData;
   input = InputData;
+  
   Planname=InputData.ReadData("Plan_name").split(";");
   Plancode=InputData.ReadData("Plan_code").split(";");
   int numofplan = Planname.length;
@@ -45,11 +57,13 @@ public class DtcRatingServiceEnhancement extends BaseClass implements API
    
     default:
    }
-   
+  
+  macro.LoadSampleRatingmodel(config, InputData);  //Load sample rating model 
+  macro.GenerateExpected(InputData, config);        //Generate expected rating models  
  }
 
     @Override
- public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException
+ public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, NumberFormatException, BiffException, java.text.ParseException
  {
    InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
   request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("State_code")+"_"+input.ReadData("Plan_name")+".json");
@@ -71,10 +85,12 @@ if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCa
     }
     else if(InputColVerify.ReadData(config.getProperty("InputColumn")).equals("Plan_code"))
     {
+    	System.out.println(Plancode.length);
         for(int j=0;j<Plancode.length;j++)
         {
          String DynamicPlanCodeJson = InputColVerify.ReadData(config.getProperty("InputJsonPath"));
-         String SplitCodeJson[] = DynamicPlanCodeJson.split("##");     
+         String SplitCodeJson[] = DynamicPlanCodeJson.split("##"); 
+         System.out.println(SplitCodeJson[0]+j+SplitCodeJson[1]);
          request.write(SplitCodeJson[0]+j+SplitCodeJson[1], Plancode[j]);
         }
      }
@@ -85,7 +101,10 @@ if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCa
    }
   }
 }while(InputColVerify.MoveForward());
- }
+
+macro.PumpinData(input, config);    //Data feed into Sample Rating model
+
+}
 
  @Override
  public void AddHeaders() throws IOException 
@@ -145,7 +164,7 @@ if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCa
 
  @Override
  public DatabaseOperation SendResponseDataToFile(DatabaseOperation output)
-   throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException 
+   throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, NumberFormatException, java.text.ParseException 
  {
 	 OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
 		do 	
@@ -171,7 +190,7 @@ if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCa
 			}
 		}while(OutputColVerify.MoveForward());
 	
-		
+		macro.PumpoutData(output, input, config);   //	data pumped out from expected rating model to db table
 	return output;
 }
 }

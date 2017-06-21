@@ -31,12 +31,12 @@ public class DatabaseOperation
 		}		
 	}
 	
-	public static void ConnectionSetup() throws SQLException,ClassNotFoundException
+	public static void ConnectionSetup(String JDBC_DRIVER, String DB_URL, String USER, String password) throws SQLException,ClassNotFoundException
 	{
-		JDBC_DRIVER = "com.mysql.jdbc.Driver";
-		DB_URL = "jdbc:mysql://192.168.35.2:3391/STARR_Config";
-		USER="root";
-		PASS ="password";
+		JDBC_DRIVER = JDBC_DRIVER;
+		DB_URL = DB_URL;
+		USER= USER;
+		PASS = password;
 		if(conn == null)
 		{
 			Class.forName(JDBC_DRIVER);
