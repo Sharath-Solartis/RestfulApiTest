@@ -16,11 +16,11 @@ import com.solartis.test.exception.POIException;
 import com.solartis.test.util.common.DatabaseOperation;
 import com.solartis.test.util.common.ExcelOperationsPOI;
 
-public class IsoMacro implements MacroInterface
+public class StarrGLMacro implements MacroInterface
 {
 	protected ExcelOperationsPOI sampleexcel=null;
 	protected String Targetpath;
-	protected IsoMacro trans;
+	protected StarrGLMacro trans;
 	protected String Samplepath;
 	protected DatabaseOperation configTable = null;
 	protected PropertiesHandle configFile;
@@ -42,17 +42,17 @@ public class IsoMacro implements MacroInterface
 	    }
 	}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	public IsoMacro(PropertiesHandle configFile) throws MacroException
+	public StarrGLMacro(PropertiesHandle configFile) throws MacroException
 	{
 		configTable = new DatabaseOperation();
-		//configFile = new PropertiesHandle("A:/1 Projects/09 ISO/Release_24_UAT/RatingTrial/configuration_file/config_json.properties");
+		//configFile = new PropertiesHandle("A:/1 Projects/09 StarrGL/Release_24_UAT/RatingTrial/configuration_file/config_json.properties");
 		try 
 		{
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
 		}
 		catch (DatabaseException e) 
 		{
-			throw new MacroException("ERROR OCCURS INITILIZE THE OBJECT OF ISOMACRO", e);
+			throw new MacroException("ERROR OCCURS INITILIZE THE OBJECT OF StarrGLMACRO", e);
 		}
 		
 	}
@@ -95,7 +95,7 @@ public class IsoMacro implements MacroInterface
 			//DatabaseOperation configTable = new DatabaseOperation();
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
 			ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
-			trans= new IsoMacro(configFile);
+			trans= new StarrGLMacro(configFile);
 			do
 			{								
 				if (configTable.ReadData("flag_for_execution").equalsIgnoreCase("Y"))
@@ -142,11 +142,11 @@ public class IsoMacro implements MacroInterface
 		}
 		catch(DatabaseException e)
 		{
-			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF StarrGL MACRO", e);
 		}
 		catch(POIException e)
 		{
-			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF StarrGL MACRO", e);
 		}
 	}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,11 +183,11 @@ public class IsoMacro implements MacroInterface
 		}
 		catch(DatabaseException e)
 		{
-			throw new MacroException("ERROR OCCURS WHILE PUMPOUT THE OUTPUT FROM RATING MODEL OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS WHILE PUMPOUT THE OUTPUT FROM RATING MODEL OF StarrGL MACRO", e);
 		}
 		catch (POIException e)
 		{
-			throw new MacroException("ERROR OCCURS 	WHILE OPENING/CLOSING THE RATING MODEL OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS 	WHILE OPENING/CLOSING THE RATING MODEL OF StarrGL MACRO", e);
 		}
 	}
 	
@@ -208,21 +208,11 @@ public class IsoMacro implements MacroInterface
 				String LookupData = Lookup(Datatowrite, configFile);
 				outputdata = (T) LookupData;
 				break;
-			case "PaddingZeros":
-				String PaddingZeros = PaddingZeros(Datatowrite);
-				outputdata = (T) PaddingZeros;
-				break;
-			case "ISOBOPWindhail":
-				int ISOBOPWindhail = ISOBOPWindhail(Datatowrite);
-				Integer windhail = new Integer(ISOBOPWindhail);
-				//Float windhail = new Float(ISOBOPWindhail);
-				outputdata =  (T) windhail;
-				break;
 			}
 		}
 		catch (DatabaseException e)
 		{
-			throw new MacroException("ERROR OCCURS 	IN TRANSLATION OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS 	IN TRANSLATION OF StarrGL MACRO", e);
 		}
 		return outputdata;
 		
@@ -267,7 +257,7 @@ public class IsoMacro implements MacroInterface
 			catch (NumberFormatException | ParseException e) 
 			{
 				// TODO Auto-generated catch block
-				throw new MacroException("ERROR OCCURS 	IN DATE FORMAT OF ISO MACRO", e);
+				throw new MacroException("ERROR OCCURS 	IN DATE FORMAT OF StarrGL MACRO", e);
 			}  			
 		   // System.out.println(value+"\t"+Date1);  						
 		
@@ -287,10 +277,11 @@ public class IsoMacro implements MacroInterface
 		catch (DatabaseException e) 
 		{
 			// TODO Auto-generated catch block
-			throw new MacroException("ERROR OCCURS 	IN LOOKUP QUERY OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS 	IN LOOKUP QUERY OF StarrGL MACRO", e);
 		}
 		HashMap<String,String> LookupMap = new HashMap<String,String>();
-		try {
+		try 
+		{
 			do
 			{
 				LookupMap.put(Lookup.ReadData("LookupData"), Lookup.ReadData("LookupValue"));
@@ -301,7 +292,7 @@ public class IsoMacro implements MacroInterface
 		catch (DatabaseException e) 
 		{
 			// TODO Auto-generated catch block
-			throw new MacroException("ERROR OCCURS 	IN LOOKUP TABLE OF ISO MACRO", e);
+			throw new MacroException("ERROR OCCURS 	IN LOOKUP TABLE OF StarrGL MACRO", e);
 		}
 		
 		if (LookupMap.get(Lookup1)==null)
@@ -312,35 +303,6 @@ public class IsoMacro implements MacroInterface
 		{
 			return LookupMap.get(Lookup1);
 		}
-	}
-	
-	protected String PaddingZeros(String Data)
-	{
-		String s = String.format("%%0%dd", 3);
-		String f =String.format(s, Integer.valueOf(Data));
-		System.out.println(Data);
-		return f;
-		
-	}
-	
-	
-	protected int ISOBOPWindhail(String Data)
-	{
-		int percentageData=0;
-		if(Data.equals("Not Applicable"))
-		{
-			percentageData = 0;
-		}
-		else
-		{
-			String[] windhail = Data.split("%");
-			percentageData = Integer.valueOf(windhail[0]);			
-			//DecimalFormat df = new DecimalFormat("#.####");
-			//String flo = df.format(percentageData);		
-			//float percentagevalue = Float.valueOf(flo);
-			return percentageData;
-		}
-		return percentageData;		
 	}
 	
 	protected boolean isInteger(String s) 
@@ -377,7 +339,5 @@ public class IsoMacro implements MacroInterface
 	    }
 		 return true;
 	}
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	
-	
+
 }
