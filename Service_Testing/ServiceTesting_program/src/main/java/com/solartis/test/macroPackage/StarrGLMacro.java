@@ -61,13 +61,12 @@ public class StarrGLMacro implements MacroInterface
 	{
 		try
 		{
-			String RateingModelName = Lookup(inputData.ReadData("RatingModel_version"),configFile);
+			String RateingModelName = Lookup("filename",configFile);
 			
 			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
-			System.out.println(inputData.ReadData("RatingModel_version")+"----------"+Samplepath);
 			sampleexcel= new ExcelOperationsPOI(Samplepath);
 		}
-		catch (DatabaseException | POIException e)
+		catch (POIException e)
 		{
 			throw new MacroException("ERROR OCCURS WHILE LOADING SAMPLE RATING MODEL", e);
 		}
@@ -142,11 +141,17 @@ public class StarrGLMacro implements MacroInterface
 		}
 		catch(DatabaseException e)
 		{
-			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF StarrGL MACRO", e);
+			//throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF StarrGL MACRO", e);
+			e.printStackTrace();
 		}
 		catch(POIException e)
 		{
-			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF StarrGL MACRO", e);
+			//throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF StarrGL MACRO", e);
+			e.printStackTrace();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
 		}
 	}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,6 +194,11 @@ public class StarrGLMacro implements MacroInterface
 		{
 			throw new MacroException("ERROR OCCURS 	WHILE OPENING/CLOSING THE RATING MODEL OF StarrGL MACRO", e);
 		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		System.out.println("output over");
 	}
 	
 	@SuppressWarnings("unchecked")

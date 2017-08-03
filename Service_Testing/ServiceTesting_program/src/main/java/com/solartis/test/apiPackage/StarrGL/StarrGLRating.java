@@ -14,10 +14,10 @@ import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.api.HttpHandle;
 import com.solartis.test.util.common.DatabaseOperation;
 
-public class StarrGLRate extends BaseClass implements API
+public class StarrGLRating extends BaseClass implements API
 {
 	MacroInterface macro = null;
-	public StarrGLRate(PropertiesHandle config) throws APIException
+	public StarrGLRating(PropertiesHandle config) throws APIException
 	{
 	    try
 	    {

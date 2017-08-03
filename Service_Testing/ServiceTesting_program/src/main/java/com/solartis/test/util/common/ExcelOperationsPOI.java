@@ -9,13 +9,16 @@ import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.solartis.test.exception.POIException;
 
@@ -23,21 +26,27 @@ public class ExcelOperationsPOI
 {
 	protected String path = null;
 	protected Workbook workbook = null;
-	protected HSSFSheet worksheet=null;
+	protected Sheet worksheet=null;
 	protected String sheet_name = null;
 	protected FileInputStream inputfilestream;
 	protected Cell cell=null;
 	protected int row_number;
 	protected int column_number;
+	protected String FileType;
 	
 	
 	public ExcelOperationsPOI(String path) throws POIException
 	{
 		 try 
 		 {
+			 this.FileType=path.substring(path.indexOf("."));
 			this.path=path;
 			inputfilestream= new FileInputStream(new File(path));
-			workbook = new HSSFWorkbook(inputfilestream);
+			if(FileType.equalsIgnoreCase(".xlsx"))
+				workbook = new XSSFWorkbook(inputfilestream);
+			else
+				workbook = new HSSFWorkbook(inputfilestream);
+			
 		 } 
 		 catch (IOException e) 
 		 {
@@ -50,7 +59,10 @@ public class ExcelOperationsPOI
 		try 
 		 {
 			inputfilestream= new FileInputStream(new File(this.path));
-			workbook = new HSSFWorkbook(inputfilestream);
+			if(FileType.equalsIgnoreCase(".xlsx"))
+				workbook = new XSSFWorkbook(inputfilestream);
+			else
+				workbook = new HSSFWorkbook(inputfilestream);
 		 } 
 		 catch (IOException e) 
 		 {
@@ -61,7 +73,8 @@ public class ExcelOperationsPOI
 	public void getsheets(String sheet_name)
 	{
 		this.sheet_name = sheet_name;
-		worksheet = (HSSFSheet) this.workbook.getSheet(sheet_name);
+				
+		worksheet = this.workbook.getSheet(sheet_name);
 		this.row_number = 0;
 		this.column_number = 0;
 	}
@@ -80,14 +93,14 @@ public class ExcelOperationsPOI
 		if(workbook == null)
 		{
 			openWorkbook();
-			worksheet = (HSSFSheet) this.workbook.getSheet(this.sheet_name);
+			worksheet = this.workbook.getSheet(this.sheet_name);
 		}
 		cell = this.worksheet.getRow(this.row_number).getCell(this.column_number);
 		switch(this.cell.getCellType()) 
 		{
 			case Cell.CELL_TYPE_BOOLEAN:	cellvalue= String.valueOf(cell.getBooleanCellValue());	break;
 			case Cell.CELL_TYPE_NUMERIC:	
-				if(HSSFDateUtil.isCellDateFormatted(cell))
+				if(DateUtil.isCellDateFormatted(cell))
 				{
 					Date date5 = cell.getDateCellValue();
 					DateFormat date1 = new SimpleDateFormat("MM/dd/yyyy");
@@ -121,19 +134,17 @@ public class ExcelOperationsPOI
 		if(workbook == null)
 		{
 			openWorkbook();
-			worksheet = (HSSFSheet) this.workbook.getSheet(this.sheet_name);
+			worksheet = this.workbook.getSheet(this.sheet_name);
 		}
 		cell = this.worksheet.getRow(rowNumber).getCell(columnNumber);
-		System.out.println(this.cell.getCellType());
 		FormulaEvaluator evaluator = this.workbook.getCreationHelper().createFormulaEvaluator();		
 		evaluator.clearAllCachedResultValues();
-		//CellValue cellvalue1 =evaluator.evaluate(cell);
 		this.workbook.setForceFormulaRecalculation(true);
 		switch(this.cell.getCellType())
 		{
 			case Cell.CELL_TYPE_BOOLEAN	:	cellvalue= String.valueOf(cell.getBooleanCellValue());		break;
 			case Cell.CELL_TYPE_NUMERIC	:	
-											if(HSSFDateUtil.isCellDateFormatted(cell))
+											if(DateUtil.isCellDateFormatted(cell))
 											{
 												Date date5 = cell.getDateCellValue();
 												DateFormat date1 = new SimpleDateFormat("MM/dd/yyyy");
@@ -151,7 +162,7 @@ public class ExcelOperationsPOI
 											switch(cell.getCachedFormulaResultType())
 											{
 												case Cell.CELL_TYPE_NUMERIC:
-													if(HSSFDateUtil.isCellDateFormatted(cell))
+													if(DateUtil.isCellDateFormatted(cell))
 													{
 														Date date5 = cell.getDateCellValue();
 														DateFormat date1 = new SimpleDateFormat("MM/dd/yyyy");
@@ -299,7 +310,10 @@ public class ExcelOperationsPOI
 	
 	public void refresh()
 	{
-		 HSSFFormulaEvaluator.evaluateAllFormulaCells(this.workbook);
+		//if(FileType.equalsIgnoreCase(".xlsx"))
+			//XSSFFormulaEvaluator.evaluateAllFormulaCells(this.workbook);
+		//else
+			HSSFFormulaEvaluator.evaluateAllFormulaCells(this.workbook);
 	}
 	
 	public void save() throws POIException
@@ -337,7 +351,6 @@ public class ExcelOperationsPOI
 		
 	}
 	
-	@SuppressWarnings("resource")
 	public void Copy(String Sampleexcelpath, String Targetexpectedpath) throws POIException
 	{
 		FileChannel source = null;
@@ -395,7 +408,16 @@ public class ExcelOperationsPOI
 		
 	}
 	
+
+
+public static void main (String args[]) throws POIException
+{
+	ExcelOperationsPOI excel = new ExcelOperationsPOI("A:/1 Projects/Starr GL RatingModelFiles/RatingModel/Raja/STARR GL Rating Calculator_Draft_4.xlsx");
+	excel.getsheets("STARR Rating inputs");
+	System.out.println(excel.read_data(5, 6));
+	String str="A:/1 Projects/Starr GL RatingModelFiles/RatingModel/Raja/STARR GL Rating Calculator_Draft_4.xlsx";
+	System.out.println(str.substring(str.indexOf(".")));
 }
 
-
+}
 
