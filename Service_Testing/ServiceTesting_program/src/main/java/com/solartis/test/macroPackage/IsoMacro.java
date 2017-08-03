@@ -45,7 +45,6 @@ public class IsoMacro implements MacroInterface
 	public IsoMacro(PropertiesHandle configFile) throws MacroException
 	{
 		configTable = new DatabaseOperation();
-		//configFile = new PropertiesHandle("A:/1 Projects/09 ISO/Release_24_UAT/RatingTrial/configuration_file/config_json.properties");
 		try 
 		{
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
@@ -64,7 +63,6 @@ public class IsoMacro implements MacroInterface
 			String RateingModelName = Lookup(inputData.ReadData("RatingModel_version"),configFile);
 			
 			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
-			System.out.println(inputData.ReadData("RatingModel_version")+"----------"+Samplepath);
 			sampleexcel= new ExcelOperationsPOI(Samplepath);
 		}
 		catch (DatabaseException | POIException e)
@@ -80,7 +78,6 @@ public class IsoMacro implements MacroInterface
 			Targetpath =  configFile.getProperty("TargetPath")+inputData.ReadData("testdata")+".xls";
 			sampleexcel.Copy(Samplepath, Targetpath);
 			sampleexcel.save();
-			System.out.println("generate expected rating over");
 		}
 		catch(DatabaseException | POIException e)
 		{
@@ -92,7 +89,6 @@ public class IsoMacro implements MacroInterface
 	{
 		try
 		{
-			//DatabaseOperation configTable = new DatabaseOperation();
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
 			ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
 			trans= new IsoMacro(configFile);
@@ -109,7 +105,6 @@ public class IsoMacro implements MacroInterface
 						String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
 						int columnNum=Alphabet.getNum(part[0].toUpperCase());
 						int rowNum = Integer.parseInt(part[1]);
-						System.out.println(columnNum+"----"+rowNum+"-----"+configTable.ReadData("Sheet_Name")+"-----"+Datatowrite);
 						excel.getsheets(configTable.ReadData("Sheet_Name"));
 						excel.getcell(rowNum, columnNum);
 						
@@ -172,9 +167,7 @@ public class IsoMacro implements MacroInterface
 					excel.getsheets(configTable.ReadData("Sheet_Name"));
 					excel.getcell(rowNum-1, columnNum);
 					String Datatowrite = excel.read_data(rowNum-1, columnNum);
-					System.out.println(Datacolumntowrite+"----------" +Datatowrite+"--------"+rowNum+"-------"+columnNum);
 					outputData.WriteData(Datacolumntowrite, Datatowrite);
-					//outputData.WriteData(Datacolumntowrite, "poda");
 				}
 			}
 			outputData.UpdateRow();
@@ -215,7 +208,6 @@ public class IsoMacro implements MacroInterface
 			case "ISOBOPWindhail":
 				int ISOBOPWindhail = ISOBOPWindhail(Datatowrite);
 				Integer windhail = new Integer(ISOBOPWindhail);
-				//Float windhail = new Float(ISOBOPWindhail);
 				outputdata =  (T) windhail;
 				break;
 			}
@@ -266,12 +258,8 @@ public class IsoMacro implements MacroInterface
 			} 
 			catch (NumberFormatException | ParseException e) 
 			{
-				// TODO Auto-generated catch block
 				throw new MacroException("ERROR OCCURS 	IN DATE FORMAT OF ISO MACRO", e);
 			}  			
-		   // System.out.println(value+"\t"+Date1);  						
-		
-		
 		return Date1;
 		
 	}
@@ -286,7 +274,6 @@ public class IsoMacro implements MacroInterface
 		} 
 		catch (DatabaseException e) 
 		{
-			// TODO Auto-generated catch block
 			throw new MacroException("ERROR OCCURS 	IN LOOKUP QUERY OF ISO MACRO", e);
 		}
 		HashMap<String,String> LookupMap = new HashMap<String,String>();
@@ -300,7 +287,6 @@ public class IsoMacro implements MacroInterface
 		} 
 		catch (DatabaseException e) 
 		{
-			// TODO Auto-generated catch block
 			throw new MacroException("ERROR OCCURS 	IN LOOKUP TABLE OF ISO MACRO", e);
 		}
 		
@@ -318,7 +304,6 @@ public class IsoMacro implements MacroInterface
 	{
 		String s = String.format("%%0%dd", 3);
 		String f =String.format(s, Integer.valueOf(Data));
-		System.out.println(Data);
 		return f;
 		
 	}
@@ -335,9 +320,6 @@ public class IsoMacro implements MacroInterface
 		{
 			String[] windhail = Data.split("%");
 			percentageData = Integer.valueOf(windhail[0]);			
-			//DecimalFormat df = new DecimalFormat("#.####");
-			//String flo = df.format(percentageData);		
-			//float percentagevalue = Float.valueOf(flo);
 			return percentageData;
 		}
 		return percentageData;		
@@ -358,7 +340,6 @@ public class IsoMacro implements MacroInterface
 	    {
 	        return false;
 	    }
-	    // only got here if we didn't return false
 	    return true;
 	}
 	protected boolean isFloat(String s)

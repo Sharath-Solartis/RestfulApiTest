@@ -113,7 +113,7 @@ public class ExcelOperationsPOI
 				break;
 			case Cell.CELL_TYPE_STRING	:		cellvalue= cell.getStringCellValue();					break;
 			case Cell.CELL_TYPE_ERROR	:		cellvalue= String.valueOf(cell.getErrorCellValue());	break;
-			case Cell.CELL_TYPE_BLANK	:		cellvalue="Blank";	break;
+			case Cell.CELL_TYPE_BLANK	:		cellvalue="";	break;
 			case 2                      :   try{
 								                	cellvalue =String.valueOf(cell.getNumericCellValue()); 
 								                } 
@@ -157,7 +157,7 @@ public class ExcelOperationsPOI
 											break;
 			case Cell.CELL_TYPE_STRING	:	cellvalue= cell.getStringCellValue();						break;
 			case Cell.CELL_TYPE_ERROR	:	cellvalue= String.valueOf(cell.getErrorCellValue())+"err";	break;//String.valueOf(cell.getErrorCellValue());
-			case Cell.CELL_TYPE_BLANK	:	cellvalue="Blank";break;
+			case Cell.CELL_TYPE_BLANK	:	cellvalue="";break;
 			case Cell.CELL_TYPE_FORMULA :   
 											switch(cell.getCachedFormulaResultType())
 											{
@@ -180,7 +180,7 @@ public class ExcelOperationsPOI
 									            case Cell.CELL_TYPE_ERROR:
 									            	cellvalue= String.valueOf(cell.getErrorCellValue())+"err";
 									            	break;
-									            case Cell.CELL_TYPE_BLANK	:	cellvalue="Blank";break;
+									            case Cell.CELL_TYPE_BLANK	:	cellvalue="";break;
 									            case Cell.CELL_TYPE_BOOLEAN	:	cellvalue= String.valueOf(cell.getBooleanCellValue());		break;
 											}
 				                            break;

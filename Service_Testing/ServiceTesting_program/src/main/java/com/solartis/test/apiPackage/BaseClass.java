@@ -1,5 +1,6 @@
 package com.solartis.test.apiPackage;
 
+import java.util.ArrayList;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.solartis.test.Configuration.PropertiesHandle;
 import com.solartis.test.exception.APIException;
@@ -23,6 +24,10 @@ public class BaseClass
 	protected DBColoumnVerify InputColVerify = null;
 	protected DBColoumnVerify OutputColVerify = null;
 	protected DBColoumnVerify StatusColVerify = null;
+	protected ArrayList<String> errorParentname = new ArrayList<String>();
+	protected ArrayList<String> errorMessage=new ArrayList<String>();
+	
+	
 	
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
 	public void LoadSampleRequest(DatabaseOperation InputData) throws APIException
@@ -174,16 +179,27 @@ public class BaseClass
 						else
 						{
 							output.WriteData(StatusColumn, "Fail");
+							output.UpdateRow();
+							analyse(StatusColVerify,output);
 						}
 					}
 					
 				}
 			 }while(StatusColVerify.MoveForward());
-	
+			
+			String message = "";
+			for(int i=0;i<errorMessage.size();i++)
+			{
+				message=message+errorMessage.get(i)+"; ";
+			}
+			output.WriteData("AnalyserResult", message);
+			errorMessage.clear();
+			errorParentname.clear();
 			return output;
 	    }
 	    catch(DatabaseException e)
 	    {
+	    	System.out.println(e);
 	    	throw new APIException("ERROR IN DB COMPARISON FUNCTION -- BASE CLASS", e);
 	    }
 	}
@@ -193,16 +209,16 @@ public class BaseClass
 	{
 		
 		boolean status = false;
-		if(actual == null)
+		if(actual == null||actual.equals(""))
 		{
-			if((expected.equals("")||expected.equals("0")))
+			if((expected == null || expected.equals("")||expected.equals("0") || expected.equals("0.0")))
 			{
 				status = true;
 			}
 		}
-		if(expected == null)
+		if(expected == null||expected.equals(""))
 		{
-			if(actual.equals("")||actual.equals("0"))
+			if(actual == null|| actual.equals("")||actual.equals("0") || actual.equals("0.0"))
 			{
 				status = true;
 			}
@@ -223,6 +239,52 @@ public class BaseClass
 
 		return status;	
 		
+	}
+
+	protected void analyse(DatabaseOperation Conditiontable,DatabaseOperation output ) throws DatabaseException 
+	{		
+		boolean flag = false;
+		if(output.ReadData(Conditiontable.ReadData("StatusColumn")).equals("Pass"))
+		{		
+
+		}
+
+		else if(output.ReadData(Conditiontable.ReadData("StatusColumn")).equals("Fail"))
+		{	
+			String[] Parentname =Conditiontable.ReadData("ParentName").split(";");
+			int noOfParentname=Parentname.length;
+			for(int i=0;i<noOfParentname;i++)
+			{								
+				if(!this.ifexist(Conditiontable.ReadData("NodeName")))
+				{
+					errorParentname.add(Parentname[i]);
+					if(flag == false)
+					{
+						errorMessage.add(Conditiontable.ReadData("Message"));
+						flag = true;
+					}
+				}
+			}
+						
+		}
+
+	}
+
+	protected boolean ifexist (String NodeName)
+	{
+		boolean exist = false;
+		int arraylength =errorParentname.size();
+		for(int i = 0; i<arraylength;i++)
+		{
+			String existParentName =errorParentname.get(i);
+			if(existParentName.equals(NodeName))
+			{
+				exist = true;
+				break;
+			}
+		}
+		return exist;	
+
 	}
 	
 }

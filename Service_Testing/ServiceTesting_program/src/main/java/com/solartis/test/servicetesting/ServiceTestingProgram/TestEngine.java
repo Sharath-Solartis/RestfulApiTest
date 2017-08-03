@@ -123,8 +123,9 @@ public class TestEngine
 					}
 				}while(input.MoveForward());
 			} 
-			catch (Exception e1)
+			catch (APIException e1)
 			{
+				e1.getCause().getMessage();
 				System.exit(0);	
 
 			}
