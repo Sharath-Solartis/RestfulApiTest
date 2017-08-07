@@ -108,7 +108,7 @@ public class LogListener implements Listener
 	public void onError(Throwable e)
 	{
 		System.out.println("Printed by Listener");
-		System.out.println(e.getMessage()+e.getCause().getMessage()+e.getCause().getCause().getMessage());
+		//System.out.println(e.getMessage()+e.getCause().getMessage()+e.getCause().getCause().getMessage());
 		e.printStackTrace();
 	}
 

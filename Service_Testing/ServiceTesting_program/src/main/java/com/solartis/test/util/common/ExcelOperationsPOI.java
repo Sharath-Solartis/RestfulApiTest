@@ -285,7 +285,8 @@ public class ExcelOperationsPOI
 	{
 		 cell = this.worksheet.getRow(rownum).getCell(columnnum);
 		 String s=(strData.getClass()).toString();
-		 //System.out.println(s);
+		 if(cell==null)
+			 System.out.println("cell is null"+rownum+"      "+columnnum);
 		if(s.equals("class java.util.Date"))
 		{
 			 cell.setCellValue((Date) strData);	

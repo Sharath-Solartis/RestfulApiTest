@@ -42,6 +42,10 @@ public class StarrGLMacro implements MacroInterface
 	    }
 	}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
+	public StarrGLMacro()
+	{
+		
+	}
 	public StarrGLMacro(PropertiesHandle configFile) throws MacroException
 	{
 		configTable = new DatabaseOperation();
@@ -141,13 +145,13 @@ public class StarrGLMacro implements MacroInterface
 		}
 		catch(DatabaseException e)
 		{
-			//throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF StarrGL MACRO", e);
-			e.printStackTrace();
+			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF StarrGL MACRO", e);
+			//e.printStackTrace();
 		}
 		catch(POIException e)
 		{
-			//throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF StarrGL MACRO", e);
-			e.printStackTrace();
+			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF StarrGL MACRO", e);
+			//e.printStackTrace();
 		}
 		catch(Exception e)
 		{
@@ -218,6 +222,14 @@ public class StarrGLMacro implements MacroInterface
 				String LookupData = Lookup(Datatowrite, configFile);
 				outputdata = (T) LookupData;
 				break;
+			case "String":
+				String Stringdata = IntegertoString(Datatowrite);
+				outputdata = (T) Stringdata;
+				break;
+			case "ReplaceComma":
+				int replaceddata= ReplaceComma(Datatowrite);
+				Integer replacdata = new Integer (replaceddata);
+				outputdata = (T) replacdata;
 			}
 		}
 		catch (DatabaseException e)
@@ -348,6 +360,39 @@ public class StarrGLMacro implements MacroInterface
 	        return false;
 	    }
 		 return true;
+	}
+	
+	protected String IntegertoString (String s)
+	{
+		return s;
+		
+	}
+	
+	protected int ReplaceComma(String s)
+	{
+		Pattern p = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(s);
+		boolean b = m.find();
+		String res="";
+		int num=0;
+		if (b)
+		{
+			 s = s.replaceAll("(?<=\\d),(?=\\d)", "");
+			 num= Integer.parseInt(s);
+		}
+		else
+		{
+			num=Integer.parseInt(s);
+		}
+
+		return num;
+		
+	}
+	
+	public static void main(String args[])
+	{
+		StarrGLMacro mac = new StarrGLMacro();
+		System.out.println(mac.ReplaceComma("100000"));
 	}
 
 }
