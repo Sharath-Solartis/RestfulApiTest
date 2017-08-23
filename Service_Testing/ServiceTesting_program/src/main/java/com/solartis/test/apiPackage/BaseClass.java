@@ -52,6 +52,10 @@ public class BaseClass
 					if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
 					{
 	
+						System.out.println("value in request---->"+request.read(InputColVerify.ReadData(config.getProperty("InputJsonPath"))));
+						System.out.println("json path is------>"+InputColVerify.ReadData(config.getProperty("InputJsonPath")));
+						System.out.println("input value------>"+input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+						
 						request.write(InputColVerify.ReadData(config.getProperty("InputJsonPath")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
 					}
 				}	
@@ -229,8 +233,8 @@ public class BaseClass
     		actual = actual.replaceAll("\\[\"", "");
     		expected = expected.replaceAll("\"\\]", "");
     		actual = actual.replaceAll("\"\\]", "");
-    		expected = expected.replaceAll("\\.[0-9]*", "");
-    		actual = actual.replaceAll("\\.[0-9]*", "");
+    		//expected = expected.replaceAll("\\.[0-9]*", "");
+    		//actual = actual.replaceAll("\\.[0-9]*", "");
     		if(expected.equals(actual))
     		{
     			status = true;

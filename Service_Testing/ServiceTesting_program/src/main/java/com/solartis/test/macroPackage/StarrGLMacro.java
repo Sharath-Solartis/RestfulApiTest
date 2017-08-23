@@ -230,6 +230,11 @@ public class StarrGLMacro implements MacroInterface
 				int replaceddata= ReplaceComma(Datatowrite);
 				Integer replacdata = new Integer (replaceddata);
 				outputdata = (T) replacdata;
+				break;
+			case "Version":
+				String versiondata=Version(Datatowrite);
+				outputdata = (T) versiondata;
+				break;
 			}
 		}
 		catch (DatabaseException e)
@@ -386,6 +391,15 @@ public class StarrGLMacro implements MacroInterface
 		}
 
 		return num;
+		
+	}
+	
+	protected String Version(String s)
+	{
+		
+		s=s.substring(1);
+		s=s.replace("-", "_");
+		return s;
 		
 	}
 	
