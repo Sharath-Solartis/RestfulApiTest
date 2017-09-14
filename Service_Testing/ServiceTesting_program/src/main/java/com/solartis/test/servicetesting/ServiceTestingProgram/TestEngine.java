@@ -75,31 +75,7 @@ public class TestEngine
 							    fireEventAPI.SendAndReceiveData();//RECIEVING AND STORING RESPONSE TO THE FILE
 								
 
-							    fireEventAPI.ResponseToString();//SHOWING RESPONSE IN LOG 
-
-									logInfo.info("Respone For Testdata--" + input.ReadData("S.No") + "is Received");
-									//===========================================temporary change in production for CW=========================================
-									//long startTime = System.currentTimeMillis();
-									api.SendAndReceiveData();//RECIEVING AND STORING RESPONSE TO THE FILE
-								
-									//long elapsedTime = System.currentTimeMillis() - startTime;
-									
-									// System.out.println("Total elapsed http request/response time in milliseconds: " + elapsedTime);
-									// output.WriteData("LatencyTime", String.valueOf(elapsedTime));
-									 
-									 //====================================================================================
-									
-									logInfo.info("REQUEST For Testdata--" + input.ReadData("S.No"));
-									try 
-									{
-										logInfo.info("REQUEST For Testdata--" + input.ReadData("S.No"));
-										api.ResponseToString();//SHOWING RESPONSE IN LOG 
-									} 
-									catch (IOException | ParseException | DocumentException e1) 
-									{
-										logError.error("Failed Rquest For Testdata--" + input.ReadData("S.No") + "---IOException | ParseException | DocumentException e1");
-										e1.printStackTrace();
-									}						
+							    fireEventAPI.ResponseToString();//SHOWING RESPONSE IN LOG 											
 
 								
 								if(actualchoice.equals("Y"))
