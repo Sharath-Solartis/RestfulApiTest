@@ -8,7 +8,7 @@ import com.solartis.test.exception.DatabaseException;
 import com.solartis.test.exception.HTTPHandleException;
 import com.solartis.test.exception.MacroException;
 import com.solartis.test.exception.POIException;
-import com.solartis.test.macroPackage.IsoMacro;
+import com.solartis.test.macroPackage.StarrGLMacro;
 import com.solartis.test.macroPackage.MacroInterface;
 import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.api.HttpHandle;
@@ -23,13 +23,12 @@ public class StarrGLRate extends BaseClass implements API
 	    {
 			this.config = config;
 			jsonElements = new DatabaseOperation();
-		
 			InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
 			OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
 			StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
 			if(config.getProperty("status").equals("Y"))
 			{
-			macro=new IsoMacro(config);	
+			macro=new StarrGLMacro(config);	
 			}
 	    }
 	    catch(MacroException e)
@@ -37,22 +36,6 @@ public class StarrGLRate extends BaseClass implements API
 	    	throw new APIException("ERROR INITATING MACRO- GL CLASS", e);
 	    }
 		
-	}
-	
-	public void AddHeaders() throws APIException
-	{
-		try
-		{
-			http = new HttpHandle(config.getProperty("test_url"),"POST");
-			http.AddHeader("Content-Type", config.getProperty("content_type"));
-			http.AddHeader("Token", config.getProperty("token"));
-			http.AddHeader("EventName", config.getProperty("EventName"));
-			http.AddHeader("EventVersion", config.getProperty("EventVersion"));
-		}
-    	catch (HTTPHandleException e) 
-		{
-			throw new APIException("ERROR ADD HEADER FUNCTION -- GL-RATING CLASS", e);
-		}
 	}
 	
 	public void LoadSampleRequest(DatabaseOperation InputData) throws APIException
@@ -85,6 +68,23 @@ public class StarrGLRate extends BaseClass implements API
 			}
 		}
 		super.PumpDataToRequest();
+	}
+	
+	@Override
+	public void AddHeaders() throws APIException
+	{
+		try
+		{
+			http = new HttpHandle(config.getProperty("test_url"),"POST");
+			http.AddHeader("Content-Type", config.getProperty("content_type"));
+			http.AddHeader("Token", config.getProperty("token"));
+			http.AddHeader("EventName", config.getProperty("EventName"));
+			http.AddHeader("EventVersion", config.getProperty("EventVersion"));
+		}
+    	catch (HTTPHandleException e) 
+		{
+			throw new APIException("ERROR ADD HEADER FUNCTION -- GL-RATING CLASS", e);
+		}
 	}
 	
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws APIException
