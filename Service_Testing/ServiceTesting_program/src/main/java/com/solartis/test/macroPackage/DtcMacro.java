@@ -1,7 +1,5 @@
 package com.solartis.test.macroPackage;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,11 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.solartis.test.Configuration.PropertiesHandle;
+import com.solartis.test.exception.DatabaseException;
+import com.solartis.test.exception.MacroException;
+import com.solartis.test.exception.POIException;
 import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.common.DatabaseOperation;
 import com.solartis.test.util.common.ExcelOperationsPOI;
-
-import jxl.read.biff.BiffException;
 
 public class DtcMacro extends DBColoumnVerify implements MacroInterface
 {
@@ -46,116 +45,192 @@ public class DtcMacro extends DBColoumnVerify implements MacroInterface
 	    }
 	}
 	
-	public DtcMacro(PropertiesHandle configFile) throws SQLException
+	public DtcMacro(PropertiesHandle configFile) throws MacroException
 	{
 		super(" ");
 		configTable = new DatabaseOperation();
-		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		
-	}
-	@Override
-	public void LoadSampleRatingmodel(PropertiesHandle configFile,DatabaseOperation inputData) throws SQLException 
-	{
-		// TODO Auto-generated method stub
-		String RateingModelName = Lookup(inputData.ReadData("State_name"),configFile);
-		System.out.println(inputData.ReadData("State_name"));
-		Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
-		sampleexcel= new ExcelOperationsPOI(Samplepath);
-	}
-
-	@Override
-	public void GenerateExpected(DatabaseOperation inputData,PropertiesHandle configFile) throws SQLException, BiffException,IOException 
-	{
-		// TODO Auto-generated method stub
-		String[] plans=inputData.ReadData("Plan_name").split(";");
-		numofplans = plans.length;
-		planname=new LinkedHashMap<Integer,String>();
-		planpath=new LinkedHashMap<Integer,String>();
-
-		for (int j=0;j<numofplans;j++)
-		{
-			planname.put(j, plans[j]);
-		}
-		for(int i=0;i<numofplans;i++)
-		{
-		Targetpath =  configFile.getProperty("TargetPath")+inputData.ReadData("testdata")+planname.get(i)+".xls";
-		sampleexcel.Copy(Samplepath, Targetpath);
-		
-		sampleexcel.save();
-	
-		
-		System.out.println("generate expected rating over");
-		planpath.put(i, Targetpath);
-		}
-	}
-
-	@Override
-	public void PumpinData(DatabaseOperation inputData,	PropertiesHandle configFile) throws NumberFormatException,BiffException, SQLException, IOException, ParseException 
-	{
-		// TODO Auto-generated method stub
-		for(int i=0;i<numofplans;i++)
+		try 
 		{
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
-			ExcelOperationsPOI excel=new ExcelOperationsPOI(planpath.get(i));
-			//System.out.println(planname.get(i));
+		} catch (DatabaseException e) 
+		{
+			throw new MacroException("ERROR OCCURS INITILIZE THE OBJECT OF DTCMACOR", e);
+		}
+		
+	}
+	@Override
+	public void LoadSampleRatingmodel(PropertiesHandle configFile,DatabaseOperation inputData) throws MacroException
+	{
+		try
+		{
+		// TODO Auto-generated method stub
+			String RateingModelName = Lookup(inputData.ReadData("State_name"),configFile);
+			System.out.println(inputData.ReadData("State_name"));
+			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
+			sampleexcel= new ExcelOperationsPOI(Samplepath);
+		}
+		catch (DatabaseException | POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE LOADING SAMPLE RATING MODEL OF DTC MACRO", e);
+		}
+	}
+
+	@Override
+	public void GenerateExpected(DatabaseOperation inputData,PropertiesHandle configFile) throws MacroException
+	{
+		try
+		{
+			// TODO Auto-generated method stub
+			String[] plans=inputData.ReadData("Plan_name").split(";");
+			numofplans = plans.length;
+			planname=new LinkedHashMap<Integer,String>();
+			planpath=new LinkedHashMap<Integer,String>();
+	
+			for (int j=0;j<numofplans;j++)
+			{
+				planname.put(j, plans[j]);
+			}
+			for(int i=0;i<numofplans;i++)
+			{
+			Targetpath =  configFile.getProperty("TargetPath")+inputData.ReadData("testdata")+planname.get(i)+".xls";
+			sampleexcel.Copy(Samplepath, Targetpath);
 			
-			//inputData.UpdateRow();
-			//System.out.println(inputData.ReadData("Plan_name"));
-			trans= new DtcMacro(configFile);
+			sampleexcel.save();
+			planpath.put(i, Targetpath);
+			}
+		}
+		catch(DatabaseException | POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE GENERATING THE EXPECTED RATING MODEL OF DTC MACRO", e);
+		}
+	}
+
+	@Override
+	public void PumpinData(DatabaseOperation inputData,	PropertiesHandle configFile) throws MacroException
+	{
+		try
+		{
+			// TODO Auto-generated method stub
+			for(int i=0;i<numofplans;i++)
+			{
+				configTable.GetDataObjects(configFile.getProperty("config_query"));
+				ExcelOperationsPOI excel=new ExcelOperationsPOI(planpath.get(i));
+				//System.out.println(planname.get(i));
+				
+				//inputData.UpdateRow();
+				//System.out.println(inputData.ReadData("Plan_name"));
+				trans= new DtcMacro(configFile);
+				do
+				{	
+					String condition = configTable.ReadData("Condition");
+					String tempdata = inputData.ReadData("Plan_name");
+					inputData.WriteData("Plan_name", planname.get(i));
+					inputData.UpdateRow();
+					if (configTable.ReadData("flag_for_execution").equalsIgnoreCase("Y")&&ConditionReading(condition,inputData))
+					{
+						//System.out.println(inputData.ReadData("Plan_name"));
+						inputData.WriteData("Plan_name", tempdata);
+						inputData.UpdateRow();
+						//System.out.println(inputData.ReadData("Plan_name"));
+						if (configTable.ReadData("Type").equals("input"))
+						{
+							
+							String CellAddress = configTable.ReadData("Cell_Address");
+							String Datacolumntowrite = configTable.ReadData("Input_DB_column");
+							String  Datatowrite = null;
+							if (Datacolumntowrite.equals("Plan_name"))
+							{
+								Datatowrite=planname.get(i);
+							}
+							else
+							{
+							Datatowrite = inputData.ReadData(Datacolumntowrite);
+							}
+							String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
+							int columnNum=Alphabet.getNum(part[0].toUpperCase());
+							int rowNum = Integer.parseInt(part[1]);
+							System.out.println(columnNum+"----"+rowNum+"-----"+configTable.ReadData("Sheet_Name")+"-----"+Datatowrite);
+							excel.getsheets(configTable.ReadData("Sheet_Name"));
+							excel.getcell(rowNum, columnNum);
+							
+							if(configTable.ReadData("Translation_Flag").equals("Y"))
+							{
+								excel.write_data(rowNum-1, columnNum, trans.Translation1(Datatowrite, configTable, configFile));
+							}
+							else
+							{
+								if(trans.isInteger(Datatowrite))
+								{
+									int datadata =Integer.parseInt(Datatowrite);
+									excel.write_data(rowNum-1, columnNum, datadata);	
+								}
+								else if(trans.isFloat(Datatowrite))
+								{
+									float floatdata = Float.parseFloat(Datatowrite);
+									excel.write_data(rowNum-1, columnNum, floatdata);
+								}
+								else
+								{
+									excel.write_data(rowNum-1, columnNum, Datatowrite);
+								}
+							}
+						}
+					}
+					else
+					{
+						inputData.WriteData("Plan_name", tempdata);
+						inputData.UpdateRow();
+					}
+				}while(configTable.MoveForward());
+				excel.refresh();
+				excel.save();	
+			}
+		}
+		catch(DatabaseException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF DTC MACRO", e);
+		}
+		catch(POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF DTC MACRO", e);
+		}
+	}
+
+	@Override
+	public void PumpoutData(DatabaseOperation outputData,DatabaseOperation inputData,PropertiesHandle configFile) throws MacroException
+	{
+		try
+		{
+			// TODO Auto-generated method stub
+			for(int i=0;i<numofplans;i++)
+			{
+			ExcelOperationsPOI excel=new ExcelOperationsPOI(planpath.get(i));
+			configTable.GetDataObjects(configFile.getProperty("config_query"));
+			excel.refresh();
 			do
-			{	
+			{
 				String condition = configTable.ReadData("Condition");
 				String tempdata = inputData.ReadData("Plan_name");
 				inputData.WriteData("Plan_name", planname.get(i));
 				inputData.UpdateRow();
-				if (configTable.ReadData("flag_for_execution").equalsIgnoreCase("Y")&&ConditionReading(condition,inputData))
+				if (configTable.ReadData("flag_for_execution").equals("Y")&&ConditionReading(condition,inputData))
 				{
 					//System.out.println(inputData.ReadData("Plan_name"));
 					inputData.WriteData("Plan_name", tempdata);
 					inputData.UpdateRow();
-					//System.out.println(inputData.ReadData("Plan_name"));
-					if (configTable.ReadData("Type").equals("input"))
+					if (configTable.ReadData("Type").equals("output"))
 					{
-						
-						String CellAddress = configTable.ReadData("Cell_Address");
 						String Datacolumntowrite = configTable.ReadData("Input_DB_column");
-						String  Datatowrite = null;
-						if (Datacolumntowrite.equals("Plan_name"))
-						{
-							Datatowrite=planname.get(i);
-						}
-						else
-						{
-						Datatowrite = inputData.ReadData(Datacolumntowrite);
-						}
+						String CellAddress = configTable.ReadData("Cell_Address");
 						String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
 						int columnNum=Alphabet.getNum(part[0].toUpperCase());
 						int rowNum = Integer.parseInt(part[1]);
-						System.out.println(columnNum+"----"+rowNum+"-----"+configTable.ReadData("Sheet_Name")+"-----"+Datatowrite);
 						excel.getsheets(configTable.ReadData("Sheet_Name"));
-						excel.getcell(rowNum, columnNum);
-						
-						if(configTable.ReadData("Translation_Flag").equals("Y"))
-						{
-							excel.write_data(rowNum-1, columnNum, trans.Translation1(Datatowrite, configTable, configFile));
-						}
-						else
-						{
-							if(trans.isInteger(Datatowrite))
-							{
-								int datadata =Integer.parseInt(Datatowrite);
-								excel.write_data(rowNum-1, columnNum, datadata);	
-							}
-							else if(trans.isFloat(Datatowrite))
-							{
-								float floatdata = Float.parseFloat(Datatowrite);
-								excel.write_data(rowNum-1, columnNum, floatdata);
-							}
-							else
-							{
-								excel.write_data(rowNum-1, columnNum, Datatowrite);
-							}
-						}
+						excel.getcell(rowNum-1, columnNum);
+						String Datatowrite = excel.read_data(rowNum-1, columnNum);
+						System.out.println(Datacolumntowrite+"----------" +Datatowrite+"--------"+rowNum+"-------"+columnNum);
+						outputData.WriteData(Datacolumntowrite, Datatowrite);
+						//outputData.WriteData(Datacolumntowrite, "poda");
 					}
 				}
 				else
@@ -163,78 +238,48 @@ public class DtcMacro extends DBColoumnVerify implements MacroInterface
 					inputData.WriteData("Plan_name", tempdata);
 					inputData.UpdateRow();
 				}
+				outputData.UpdateRow();
 			}while(configTable.MoveForward());
-			excel.refresh();
-			excel.save();	
+			excel.save();
+			}
 		}
-	}
-
-	@Override
-	public void PumpoutData(DatabaseOperation outputData,DatabaseOperation inputData,PropertiesHandle configFile) throws NumberFormatException,SQLException, ParseException 
-	{
-		// TODO Auto-generated method stub
-		for(int i=0;i<numofplans;i++)
+		catch(DatabaseException e)
 		{
-		ExcelOperationsPOI excel=new ExcelOperationsPOI(planpath.get(i));
-		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		excel.refresh();
-		do
+			throw new MacroException("ERROR OCCURS WHILE PUMPOUT THE OUTPUT FROM RATING MODEL OF DTC MACRO", e);
+		}
+		catch (POIException e)
 		{
-			String condition = configTable.ReadData("Condition");
-			String tempdata = inputData.ReadData("Plan_name");
-			inputData.WriteData("Plan_name", planname.get(i));
-			inputData.UpdateRow();
-			if (configTable.ReadData("flag_for_execution").equals("Y")&&ConditionReading(condition,inputData))
-			{
-				//System.out.println(inputData.ReadData("Plan_name"));
-				inputData.WriteData("Plan_name", tempdata);
-				inputData.UpdateRow();
-				if (configTable.ReadData("Type").equals("output"))
-				{
-					String Datacolumntowrite = configTable.ReadData("Input_DB_column");
-					String CellAddress = configTable.ReadData("Cell_Address");
-					String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
-					int columnNum=Alphabet.getNum(part[0].toUpperCase());
-					int rowNum = Integer.parseInt(part[1]);
-					excel.getsheets(configTable.ReadData("Sheet_Name"));
-					excel.getcell(rowNum-1, columnNum);
-					String Datatowrite = excel.read_data(rowNum-1, columnNum);
-					System.out.println(Datacolumntowrite+"----------" +Datatowrite+"--------"+rowNum+"-------"+columnNum);
-					outputData.WriteData(Datacolumntowrite, Datatowrite);
-					//outputData.WriteData(Datacolumntowrite, "poda");
-				}
-			}
-			else
-			{
-				inputData.WriteData("Plan_name", tempdata);
-				inputData.UpdateRow();
-			}
-			outputData.UpdateRow();
-		}while(configTable.MoveForward());
-		excel.save();
+			throw new MacroException("ERROR OCCURS 	WHILE OPENING/CLOSING THE RATING MODEL OF DTC MACRO", e);
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected <T> T Translation1(String Datatowrite, DatabaseOperation configTable,  PropertiesHandle configFile) throws SQLException, ParseException
+	protected <T> T Translation1(String Datatowrite, DatabaseOperation configTable,  PropertiesHandle configFile) throws MacroException 
 	{
 		T outputdata = null;
-		switch(configTable.ReadData("Translation_Function"))
+		try
 		{
-		case "Date": 
-			Date DateData = Date(Datatowrite,"mm/dd/yyyy",configTable.ReadData("Translation_Format"));
-			outputdata = (T) DateData;
-			break;
-		case "Lookup":
-			String LookupData = Lookup(Datatowrite, configFile);
-			outputdata = (T) LookupData;
-			break;
+			switch(configTable.ReadData("Translation_Function"))
+			{
+			case "Date": 
+				Date DateData = Date(Datatowrite,"mm/dd/yyyy",configTable.ReadData("Translation_Format"));
+				outputdata = (T) DateData;
+				break;
+			case "Lookup":
+				String LookupData = Lookup(Datatowrite, configFile);
+				outputdata = (T) LookupData;
+				break;
+			}
+		}
+		catch (DatabaseException e)
+		{
+			throw new MacroException("ERROR OCCURS 	IN TRANSLATION OF DTC MACRO", e);
 		}
 			return outputdata;
 			
 	}
 	
-	protected  Date Date(String Date,String InputFormat,String ExpectedFormat) throws ParseException
+	protected  Date Date(String Date,String InputFormat,String ExpectedFormat) throws  MacroException
 	{
 		String value ="";
 		Date Date1=null;
@@ -269,26 +314,35 @@ public class DtcMacro extends DBColoumnVerify implements MacroInterface
 		   // System.out.println(value+"\t"+Date1);  						
 		}
 		
-		catch (NumberFormatException e) 
+		catch (NumberFormatException | ParseException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new MacroException("ERROR OCCURS 	IN DATE FORMAT OF DTC MACRO", e);
 		}
 		return Date1;
 		
 	}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	protected String  Lookup(String Lookup1, PropertiesHandle configFile) throws SQLException
+	protected String  Lookup(String Lookup1, PropertiesHandle configFile) throws MacroException
 	{
 		DatabaseOperation Lookup = new DatabaseOperation();
-		Lookup.GetDataObjects(configFile.getProperty("lookup_query"));
-		HashMap<String,String> LookupMap = new HashMap<String,String>();
-		do
+		try {
+			Lookup.GetDataObjects(configFile.getProperty("lookup_query"));
+		} 
+		catch (DatabaseException e) 
 		{
-			String LookupData=Lookup.ReadData("LookupData");
-			String LookupValue=Lookup.ReadData("LookupValue");
-			LookupMap.put(LookupData, LookupValue);
-		}while(Lookup.MoveForward());
+			throw new MacroException("ERROR OCCURS 	IN LOOKUP QUERY OF DTC MACRO", e);
+		}
+		HashMap<String,String> LookupMap = new HashMap<String,String>();
+		try {
+			do
+			{
+				LookupMap.put(Lookup.ReadData("LookupData"), Lookup.ReadData("LookupValue"));
+			}while(Lookup.MoveForward());
+		} 
+		catch (DatabaseException e) 
+		{
+			throw new MacroException("ERROR OCCURS 	IN LOOKUP TABLE OF DTC MACRO", e);
+		}
 		if (LookupMap.get(Lookup1)==null)
 		{
 			return "Other";
@@ -333,34 +387,4 @@ public class DtcMacro extends DBColoumnVerify implements MacroInterface
 	    }
 		 return true;
 	}
-	
-	/*public static void main(String args[]) throws Exception, SQLException
-	{
-		System.setProperty("jsse.enableSNIExtension", "false");	
-		configFile = new PropertiesHandle("A:/1 Projects/08 DTC/Release16/RatingEnhancement - Copy/configuration_file/config_exp_json.properties");
-	
-		DatabaseOperation inputData = new DatabaseOperation();
-		DatabaseOperation outputData = new DatabaseOperation();
-		DatabaseOperation.ConnectionSetup(configFile);
-		inputData.GetDataObjects(configFile.getProperty("input_query"));
-		outputData.GetDataObjects(configFile.getProperty("output_query"));
-		DtcMacro rating = new DtcMacro();
-		do
-		{			
-			if (inputData.ReadData("Flag_for_execution").equals("Y"))
-			{
-				rating.LoadSampleRatingmodel(configFile, inputData);
-				rating.GenerateExpected(inputData,configFile);
-				rating.PumpinData(inputData,configFile);
-				rating.PumpoutData(configTable,outputData,inputData);
-			}
-			else
-			{
-				//inputData.move_next();
-			}
-			
-		}while (inputData.MoveForward()&& outputData.MoveForward());
-		
-		DatabaseOperation.CloseConn();
-	}*/
 }

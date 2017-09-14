@@ -2,6 +2,7 @@ package com.solartis.test.util.api;
 
 import java.sql.SQLException;
 
+import com.solartis.test.exception.DatabaseException;
 import com.solartis.test.util.common.DatabaseOperation;
 
 public class DBColoumnVerify extends DatabaseOperation 
@@ -12,12 +13,19 @@ public class DBColoumnVerify extends DatabaseOperation
 	{
 		this.CondColName = CondColName;
 	}
-	public boolean DbCol(DatabaseOperation DataTable) throws SQLException
+	public boolean DbCol(DatabaseOperation DataTable) throws DatabaseException
 	{
-		return ConditionReading(this.rs.getString(CondColName),DataTable);
+			try 
+			{
+				return ConditionReading(this.rs.getString(CondColName),DataTable);
+			}
+			catch (SQLException e) 
+			{
+				throw new DatabaseException("ERROR IN DB CONDITION COLOUMN", e);
+			}
 	}
 
-	protected boolean ConditionReading(String condition,DatabaseOperation DataTable) throws SQLException
+	protected boolean ConditionReading(String condition,DatabaseOperation DataTable) throws DatabaseException
 	{
 		boolean ConditionReading=false;
 		

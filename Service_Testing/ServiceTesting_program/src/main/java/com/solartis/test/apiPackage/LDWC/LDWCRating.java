@@ -10,6 +10,10 @@ import com.jayway.jsonpath.PathNotFoundException;
 import com.solartis.test.Configuration.PropertiesHandle;
 import com.solartis.test.apiPackage.API;
 import com.solartis.test.apiPackage.BaseClass;
+import com.solartis.test.exception.APIException;
+import com.solartis.test.exception.DatabaseException;
+import com.solartis.test.exception.HTTPHandleException;
+import com.solartis.test.exception.RequestFormatException;
 import com.solartis.test.util.api.*;
 import com.solartis.test.util.common.*;
 
@@ -18,12 +22,10 @@ public class LDWCRating extends BaseClass implements API
 {
 	final String CHAR_LIST = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=";
 	final int RANDOM_STRING_LENGTH = 10;
-	public LDWCRating(PropertiesHandle config) throws SQLException
+	public LDWCRating(PropertiesHandle config)
 	{
-
 		this.config = config;
 		XmlElements = new DatabaseOperation();
-		//XmlElements.GetDataObjects(config.getProperty("json_query"));
 		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
 		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
 		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
@@ -31,104 +33,104 @@ public class LDWCRating extends BaseClass implements API
 	}
 	
 	@Override
-	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException
+	public void LoadSampleRequest(DatabaseOperation InputData)
 	{	 
 		this.input = InputData;	
 		sampleInput = new XmlHandle(config.getProperty("sample_request")+ "request.xml");	
 	}
 		
 	@Override
-	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException 
+	public void PumpDataToRequest() throws APIException
 	{
-		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
-		request = new XmlHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request"+".xml");
-		request.StringToFile(sampleInput.FileToString());
-		String Reqid = this.RqUID();
-		System.out.println(Reqid);
-		request.write("//InsuranceSvcRq/RqUID",Reqid);
-		input.WriteData("RequestUID", Reqid);
-		
-		do
+		try
 		{
-			if(InputColVerify.DbCol(input) && (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+			InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
+			request = new XmlHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request"+".xml");
+			request.StringToFile(sampleInput.FileToString());
+			String Reqid = this.RqUID();
+			System.out.println(Reqid);
+			request.write("//InsuranceSvcRq/RqUID",Reqid);
+			input.WriteData("RequestUID", Reqid);
+			
+			do
 			{
-				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				if(InputColVerify.DbCol(input) && (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
-					request.write(InputColVerify.ReadData(config.getProperty("InputJsonPath")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
-				}
-			}	
-		}while(InputColVerify.MoveForward());
+					if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+					{
+						request.write(InputColVerify.ReadData(config.getProperty("InputJsonPath")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+					}
+				}	
+			}while(InputColVerify.MoveForward());
+		}
+		catch(DatabaseException | RequestFormatException e)
+		{
+			throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- LDWC RATING CLASS", e);
+		}
 		
 	}
 	
 	@Override
-	public void AddHeaders() throws IOException
+	public void AddHeaders() throws APIException
 	{
-		http = new HttpHandle(config.getProperty("test_url"),"POST");
-		http.AddHeader("Content-Type", config.getProperty("content_type"));
-	
+		try 
+		{
+			http = new HttpHandle(config.getProperty("test_url"),"POST");
+			http.AddHeader("Content-Type", config.getProperty("content_type"));
+		}
+		catch (HTTPHandleException e) 
+		{
+			throw new APIException("ERROR ADD HEADER FUNCTION -- LDWC RATING CLASS", e);
+		}
 	}
 
 	@Override
-	public void SendAndReceiveData() throws SQLException 
+	public void SendAndReceiveData() throws APIException
 	{
-		String input_data= null;
-		try {
-			input_data = request.FileToString();
-		} catch (IOException | ParseException | DocumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
+		try
+		{
+			String input_data = request.FileToString();
 			http.SendData(input_data);
-			//System.out.println(input_data);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		String response_string = null;
-		
-		try {
-			response_string = http.ReceiveData();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		response = new XmlHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response"+".xml");
-		try {
+			String response_string = http.ReceiveData();
+			response = new XmlHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response"+".xml");
 			response.StringToFile(response_string);
-		} catch (IOException | DocumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
+		catch(RequestFormatException | HTTPHandleException | DatabaseException e)
+		{
+			throw new APIException("ERROR IN SEND AND RECIEVE DATA FUNCTION -- BASE CLASS", e);
+		}
 	}
 
 	@Override
-	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output)
-			throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException
+	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws APIException
 	{
-		 OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
-		do 	
-		{
-		if(OutputColVerify.DbCol(input) && (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
-		{
-			 try
-		      {	
-			   System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
-			   String actual = (response.read((OutputColVerify.ReadData(config.getProperty("OutputJsonPath")))).replaceAll("\\[\"","")).replaceAll("\"\\]","").replaceAll("\\\\","");
-			   output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
-			   output.WriteData("flag_for_execution", "Completed");
-		      }
-				catch(PathNotFoundException e)
-				{
-					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
+		try
+		{ 
+			OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
+			do 	
+			{
+			if(OutputColVerify.DbCol(input) && (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+			{
+				 try
+			      {	
+				   System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+				   String actual = (response.read((OutputColVerify.ReadData(config.getProperty("OutputJsonPath")))).replaceAll("\\[\"","")).replaceAll("\"\\]","").replaceAll("\\\\","");
+				   output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+				   output.WriteData("flag_for_execution", "Completed");
+			      }
+					catch(PathNotFoundException e)
+					{
+						output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
+					}
 				}
-			}
-		}while(OutputColVerify.MoveForward());
-
-			return output;	
+			}while(OutputColVerify.MoveForward());
+	
+				return output;	
+		}
+		catch(DatabaseException | RequestFormatException e)
+		{
+			throw new APIException("ERROR IN SEND RESPONSE TO FILE FUNCTION -- LDWC RATING CLASS", e);
+		}
 		
 	}
 	

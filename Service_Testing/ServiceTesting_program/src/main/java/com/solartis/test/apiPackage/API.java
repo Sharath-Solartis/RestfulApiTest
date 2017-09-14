@@ -1,25 +1,17 @@
 package com.solartis.test.apiPackage;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.sql.SQLException;
-
-import jxl.read.biff.BiffException;
-
-import org.dom4j.DocumentException;
-import org.json.simple.parser.ParseException;
-
+import com.solartis.test.exception.APIException;
 import com.solartis.test.util.common.*;
 
 public interface API 
 {
-	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException,BiffException, IOException;
-	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException,ClassNotFoundException, NumberFormatException, java.text.ParseException, BiffException;
-	public void AddHeaders() throws IOException;
-	public void SendAndReceiveData() throws SQLException;
-	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException,ClassNotFoundException,NumberFormatException, java.text.ParseException;
-	public DatabaseOperation CompareFunction(DatabaseOperation output) throws SQLException,ClassNotFoundException;
-	public String RequestToString() throws IOException, ParseException, DocumentException;
-	public String ResponseToString() throws IOException, ParseException, DocumentException;
+	public void LoadSampleRequest(DatabaseOperation InputData) throws APIException;
+	public void PumpDataToRequest() throws APIException;
+	public void AddHeaders() throws APIException;
+	public void SendAndReceiveData() throws APIException;
+	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws APIException;
+	public DatabaseOperation CompareFunction(DatabaseOperation output) throws APIException;
+	public String RequestToString() throws APIException;
+	public String ResponseToString() throws APIException;
 	
 }

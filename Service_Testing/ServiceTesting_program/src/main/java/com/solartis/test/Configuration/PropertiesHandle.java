@@ -5,9 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.sql.SQLException;
 import java.util.Properties;
 
+import com.solartis.test.exception.DatabaseException;
+import com.solartis.test.exception.PropertiesHandleException;
 import com.solartis.test.util.common.DatabaseOperation;
 
 public class PropertiesHandle extends Properties
@@ -24,11 +25,11 @@ public class PropertiesHandle extends Properties
 	protected String DB_URL;
 	protected String USER;
 	protected String password;
-	//protected String priority;
+	protected String priority;
 
 	static DatabaseOperation ConfigQuery = new DatabaseOperation();
 			
-	    public PropertiesHandle(String Project,String Api, String Env ,String OutputChioce, String UserName, String JDBC_DRIVER, String DB_URL, String USER, String password) throws ClassNotFoundException, SQLException
+	    public PropertiesHandle(String Project,String Api, String Env ,String OutputChioce, String UserName, String JDBC_DRIVER, String DB_URL, String USER, String password, String priority) throws DatabaseException, PropertiesHandleException
 		{
 			this.Project = Project;
 			this.Api=Api;
@@ -39,13 +40,13 @@ public class PropertiesHandle extends Properties
 			this.DB_URL=DB_URL;
 			this.USER=USER;
 			this.password=password;
-			//this.priority=priority;
+			this.priority=priority;
 			
 			WriteProperty(UserName);
 			
 		}
 		
-		protected void WriteProperty(String UserName) throws ClassNotFoundException, SQLException
+		protected void WriteProperty(String UserName) throws DatabaseException, PropertiesHandleException
 		{
 			DatabaseOperation.ConnectionSetup(JDBC_DRIVER, DB_URL, USER, password);
 
@@ -105,417 +106,211 @@ public class PropertiesHandle extends Properties
 		 
 		}
 		
-		protected String RdmsQuery(String OutputColoumn) throws SQLException
+		protected String RdmsQuery(String OutputColoumn) throws PropertiesHandleException
 		{
-			ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
-			return "SELECT * FROM " + ConfigQuery.ReadData(OutputColoumn);
+			try
+			{
+				ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
+				return "SELECT * FROM " + ConfigQuery.ReadData(OutputColoumn);
+			}
+			catch(DatabaseException e)
+			{
+				throw new PropertiesHandleException("ERROR IN SQL - QUERY -- " + OutputColoumn, e);
+			}
 		}
 		
-		/*protected String RdmsQueryWithCondition(String OutputColoumn, String priority) throws SQLException
-		{
-			ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
-			return "SELECT * FROM " + ConfigQuery.ReadData(OutputColoumn) + " WHERE " + ConfigQuery.ReadData(OutputColoumn) + ".Priority = '" + priority + "'";
-		}*/
-		
-		protected String RdmsValue(String OutputColoumn) throws SQLException
-		{
-			ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
-			return ConfigQuery.ReadData(OutputColoumn);
-		}
-
-	
-		protected void OutputInSameTable() // FUNCTION CHECK OUTPUT IN SAME TABLE ARE NOT
+		protected String RdmsQueryWithPriority(String OutputColoumn, String priority) throws PropertiesHandleException
 		{
 			try 
 			{
-				this.put("output_in_same_table", this.RdmsValue("OutputInInputTable"));
+				ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
+				return "SELECT * FROM " + ConfigQuery.ReadData(OutputColoumn) + " WHERE " + ConfigQuery.ReadData(OutputColoumn) + ".Priority = '" + priority + "'";	
 			} 
-			catch (SQLException e) 
+			catch (DatabaseException e)
 			{
-			    System.out.println("Error in OutputInSameTable Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
+				throw new PropertiesHandleException("ERROR IN SQL - PRIORITY QUERY -- " + OutputColoumn, e);
 			}
+		}
+		
+		protected String RdmsQueryWithCustomSortPriority(String OutputColoumn) throws PropertiesHandleException
+		{
+			try 
+			{
+				ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
+				return "SELECT * FROM " + ConfigQuery.ReadData(OutputColoumn) + " WHERE (" + ConfigQuery.ReadData(OutputColoumn) + ".Priority = 'high' OR " + ConfigQuery.ReadData(OutputColoumn) + ".Priority = 'low' or " + ConfigQuery.ReadData(OutputColoumn) + ".Priority = 'medium') ORDER BY "+ ConfigQuery.ReadData(OutputColoumn)+".`S.No` , FIELD( " + ConfigQuery.ReadData(OutputColoumn) + ".Priority ,'high','medium','low')";
+			} 
+			catch (DatabaseException e)
+			{
+				throw new PropertiesHandleException("ERROR IN SQL - CUSTOM SORT PRIORITY QUERY -- " + OutputColoumn, e);
+			}
+		}
+		
+		protected String RdmsValue(String OutputColoumn) throws PropertiesHandleException
+		{
+			try
+			{
+				ConfigQuery.GetDataObjects("SELECT UserFolder_CONFIG.RootFolder,UserFolder_CONFIG.JDCDriver,UserFolder_CONFIG.DB_URL,UserFolder_CONFIG.DB_UserName,UserFolder_CONFIG.DB_Password,UserFolder_CONFIG.UserDBName,Version_CONFIG.Version,Project_CONFIG.ProjectDBName,Project_CONFIG.ServiceType,Environment_CONFIG.URL,Project_CONFIG.Token,VersionDetail_CONFIG.EventName,VersionDetail_CONFIG.EventVersion,API_CONFIG.OutputInInputTable,VersionDetail_CONFIG.ClassName,VersionDetail_CONFIG.InputConditonTable,VersionDetail_CONFIG.InputTable,VersionDetail_CONFIG.OutputConditionTable,VersionDetail_CONFIG.OutputTable,VersionDetail_CONFIG.MacroMappingTable,VersionDetail_CONFIG.MacroTranslationTable FROM Project_CONFIG INNER JOIN UserFolder_CONFIG INNER JOIN API_CONFIG ON Project_CONFIG.ProjectID = API_CONFIG.ProjectID INNER JOIN Environment_CONFIG ON API_CONFIG.APIID = Environment_CONFIG.APIID INNER JOIN Version_CONFIG ON Environment_CONFIG.Env_ID = Version_CONFIG.Env_ID INNER JOIN VersionDetail_CONFIG ON (VersionDetail_CONFIG.Verision = Version_CONFIG.Version and VersionDetail_CONFIG.APIID = API_CONFIG.APIID)  WHERE Project_CONFIG.ProjectName ='" + Project +"' AND API_CONFIG.APIName = '" + Api + "' AND Environment_CONFIG.Env_Name = '" + Env + "' AND UserFolder_CONFIG.User_ID = '" + UserName + "' ORDER BY Version_CONFIG.Version DESC LIMIT 1");
+				return ConfigQuery.ReadData(OutputColoumn);
+			}
+			catch(DatabaseException e)
+			{
+				throw new PropertiesHandleException("ERROR IN RETRIVING DATA FROM -- " + OutputColoumn, e);
+			}
+		}
+
+	
+		protected void OutputInSameTable() throws PropertiesHandleException // FUNCTION CHECK OUTPUT IN SAME TABLE ARE NOT
+		{
+			this.put("output_in_same_table", this.RdmsValue("OutputInInputTable"));
 		}	
 		
 		protected void ActualAndStatus(String Actual, String Status)// FUNCTION FOR ACTUAL AND STATUS OCCURANCE
 		{
-			try 
-			{
-				this.put("actual", Actual);
-			    this.put("status", Status);
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in ActualAndStatus Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("actual", Actual);
+			this.put("status", Status);
 		}	
 		
-		protected void SampleRequest()// FUNCTION FOR SAMPLEREQUEST PATH
+		protected void SampleRequest() throws PropertiesHandleException// FUNCTION FOR SAMPLEREQUEST PATH
 		{
-			try 
-			{
-				this.put("sample_request", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/SampleRequest/SampleRequest" + this.RdmsValue("Version") + "/");
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in SampleRequest Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("sample_request", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/SampleRequest/SampleRequest" + this.RdmsValue("Version") + "/");
 		}
 		
-		protected void RequestLocation()// FUNCTION FOR REQUEST TO SAVE PATH
+		protected void RequestLocation() throws PropertiesHandleException// FUNCTION FOR REQUEST TO SAVE PATH
 		{
-			try 
-			{
-				this.put("request_location", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/Request/");
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in RequestLocation Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("request_location", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/Request/");
 		}
 		
-		protected void ResponseLocation()// FUNCTION FOR RESPONSE TO SAVE PATH
+		protected void ResponseLocation() throws PropertiesHandleException// FUNCTION FOR RESPONSE TO SAVE PATH
 		{
-			try 
-			{
-				 this.put("response_location", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/Response/");
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in ResponseLocation Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("response_location", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/Response/");
 		}
 		
-		protected void SampleRatingModelLocation()// FUNCTION FOR SAMPLE RATING MODEL PATH
+		protected void SampleRatingModelLocation() throws PropertiesHandleException// FUNCTION FOR SAMPLE RATING MODEL PATH
 		{
-			try 
-			{
-				this.put("Samplepath", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/SampleRatingModel/SampleRating" + this.RdmsValue("Version") + "/");
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in SampleRatingLocation Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("Samplepath", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api + "/SampleRatingModel/SampleRating" + this.RdmsValue("Version") + "/");
 		}
 		
-		protected void ExpectedRatingModelPath()// FUNCTION FOR EXPECTED RATING MODEL PATH
+		protected void ExpectedRatingModelPath() throws PropertiesHandleException// FUNCTION FOR EXPECTED RATING MODEL PATH
 		{
-			try 
-			{
-				this.put("TargetPath", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api +  "/RatingModelResult/");
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in ExpectedRatingModelPath Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("TargetPath", this.RdmsValue("RootFolder") + "/" + Project + "/" + Api +  "/RatingModelResult/");
 		}
 		
-		protected void MacroMappingQuery()// FUNCTION TO GET RESULT SET FROM MACRO MAPPING TABLE 
+		protected void MacroMappingQuery() throws PropertiesHandleException// FUNCTION TO GET RESULT SET FROM MACRO MAPPING TABLE 
 		{
-			try 
-			{
-				this.put("config_query", this.RdmsQuery("MacroMappingTable"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in MacroMappingQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("config_query", this.RdmsQuery("MacroMappingTable"));
 		}
 		
-		protected void MacroTranslationQuery()// FUNCTION TO GET RESULT SET FROM MACRO TRNSLATION TABLE 
+		protected void MacroTranslationQuery() throws PropertiesHandleException// FUNCTION TO GET RESULT SET FROM MACRO TRNSLATION TABLE 
 		{
-			try 
-			{
-				this.put("lookup_query", this.RdmsQuery("MacroTranslationTable"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in MacroTranslationQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("lookup_query", this.RdmsQuery("MacroTranslationTable"));
 		}
 
-		protected void URL()// FUNCTION TO GET URL
+		protected void URL() throws PropertiesHandleException// FUNCTION TO GET URL
 		{
-			try 
-			{
-				this.put("test_url", this.RdmsValue("URL"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in URL Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("test_url", this.RdmsValue("URL"));	
 		}
 		
-		protected void ContentType()// FUNCTION TO GET CONTENTTYPE
+		protected void ContentType() throws PropertiesHandleException// FUNCTION TO GET CONTENTTYPE
 		{
-			try 
-			{
-				this.put("content_type", "application/"+this.RdmsValue("ServiceType"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in ContentType Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("content_type", "application/"+this.RdmsValue("ServiceType"));
+	    }
+	
+		protected void Token() throws PropertiesHandleException// FUNCTION TO GET TOKEN
+		{
+			this.put("token", this.RdmsValue("Token"));
 		}
 		
-
-		protected void Token()// FUNCTION TO GET TOKEN
+		protected void EventName() throws PropertiesHandleException// FUNCTION TO GET EVENT-NAME
 		{
-			try 
-			{
-				this.put("token", this.RdmsValue("Token"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in ContentType Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+		    this.put("EventName", this.RdmsValue("EventName"));
 		}
 		
-		protected void EventName()// FUNCTION TO GET EVENT-NAME
+		protected void EventVersion() throws PropertiesHandleException// FUNCTION TO GET EVENT-VERSION
 		{
-			try 
-			{
-				this.put("EventName", this.RdmsValue("EventName"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in EventName Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+		    this.put("EventVersion", this.RdmsValue("EventVersion"));
 		}
-		
-		protected void EventVersion()// FUNCTION TO GET EVENT-VERSION
+	
+		protected void InputQuery() throws PropertiesHandleException// FUNCTION FOR INPUTQUERY
 		{
-			try 
-			{
-				this.put("EventVersion", this.RdmsValue("EventVersion"));
-		    } 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in EventVersion Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
-		}
-		
-
-		protected void InputQuery()// FUNCTION FOR INPUTQUERY
-		{
-			try 
-			{
-				this.put("input_query",  this.RdmsQuery("InputTable"));
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in InputQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
-			
-			/*try 
-			{
 				if(priority.equalsIgnoreCase("all"))
 				{
-					this.put("input_query",  this.RdmsQuery("InputTable"));
+					this.put("input_query",  this.RdmsQueryWithCustomSortPriority("InputTable") );
 				}
 				else if(priority.equalsIgnoreCase("high") || priority.equalsIgnoreCase("low"))
 				{
-					this.put("input_query",  this.RdmsQueryWithCondition("InputTable", priority));
+					this.put("input_query",  this.RdmsQueryWithPriority("InputTable", priority));
 				}		
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in InputQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}*/
 		}
 		
-		protected void OutputQuery()// FUNCTION FOR OUTPUTQUERY
+		protected void OutputQuery() throws PropertiesHandleException// FUNCTION FOR OUTPUTQUERY
 		{
-			try 
-			{
-				this.put("output_query", this.RdmsQuery("OutputTable"));
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in OutputQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("output_query", this.RdmsQuery("OutputTable"));
 		}
 		
-		protected void InputConditionQuery()// FUNCTION FOR INPUT-CONDITION-QUERY
+		protected void InputConditionQuery() throws PropertiesHandleException// FUNCTION FOR INPUT-CONDITION-QUERY
 		{
-			try 
-			{
-				this.put("InputColQuery",this.RdmsQuery("InputConditonTable"));
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in InputConditionQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("InputColQuery",this.RdmsQuery("InputConditonTable"));
 		}
 		
-		protected void OutputConiditionQuery()// FUNCTION FOR OUTPUT-CONDITION-QUERY
+		protected void OutputConiditionQuery() throws PropertiesHandleException// FUNCTION FOR OUTPUT-CONDITION-QUERY
 		{
-			try 
-			{
-				this.put("OutputColQuery",this.RdmsQuery("OutputConditionTable"));
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in OutputConiditionQuery Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("OutputColQuery",this.RdmsQuery("OutputConditionTable"));
 		}
 		
-		protected void ClassName() // FUNCTION TOS GET CLASS-NAME
+		protected void ClassName() throws PropertiesHandleException // FUNCTION TOS GET CLASS-NAME
 		{
-			try 
-			{
-				this.put("ClassName", this.RdmsValue("ClassName"));
-			} 
-			catch (SQLException e) 
-			{
-			    System.out.println("Error in ClassName Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("ClassName", this.RdmsValue("ClassName"));
 		}	
 		
-
 		protected void InputJsonPath() // FUNCTION TO GET INPUT-JSON-PATH
 		{
-			try 
-			{
-				this.put("InputJsonPath", "InputJsonPath");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in InputJsonPath Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("InputJsonPath", "InputJsonPath");
 		}
 		
 		protected void OutputJsonPath() // FUNCTION TO GET OUTPUT-JSON-PATH
 		{
-			try 
-			{
-				this.put("OutputJsonPath", "OutputJsonPath");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in OutputJsonPath Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+		    this.put("OutputJsonPath", "OutputJsonPath");
 		}
 		
-
 		protected void InputColumn() // FUNCTION TO GET INPUT-COLUMN
 		{
-			try 
-			{
-				this.put("InputColumn", "InputColumn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in InputColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("InputColumn", "InputColumn");
 		}
 		
 		protected void OutputColumn() // FUNCTION TO GET OUTPUT-COLUMN
 		{
-			try 
-			{
-				this.put("OutputColumn", "OutputColumn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in OutputColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("OutputColumn", "OutputColumn");
 		}
 		
-
 	    protected void InputConditionColumn() // FUNCTION TO GET INPUT-CONDITION-COLUMN
 		{
-			try 
-			{
-				this.put("InputCondColumn", "InputColumnCondtn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in InputConditionColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("InputCondColumn", "InputColumnCondtn");
 		}
 		
 		protected void OutputConditionColumn() // FUNCTION TO GET OUTPUT-CONDITION-COLUMN
 		{
-			try 
-			{
-				this.put("OutputCondColumn", "OutputColumnCondtn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in OutputConditionColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("OutputCondColumn", "OutputColumnCondtn");
 		}
 		
 	    protected void ExpectedColumn() // FUNCTION TO GET EXPECTED-COLUMN
 		{
-			try 
-			{
-				this.put("ExpectedColumn", "ExpectedColumn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in ExpectedColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("ExpectedColumn", "ExpectedColumn");
 		}
 		
 		protected void StatusColumn() // FUNCTION TO GET STATUS-COLUMN
 		{
-			try 
-			{
-				  this.put("StatusColumn", "StatusColumn");
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in StatusColumn Fuction-- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("StatusColumn", "StatusColumn");
 		}
 		
-
-	    protected void DBdetails()// FUNCTION FOR DB-DETAILS
+	    protected void DBdetails() throws PropertiesHandleException// FUNCTION FOR DB-DETAILS
 		{
-			try 
-			{
-				this.put("jdbc_driver", this.RdmsValue("JDCDriver"));
-			    this.put("db_url", this.RdmsValue("DB_URL") + "/" + this.RdmsValue("ProjectDBName") + "_" + this.RdmsValue("UserDBName"));
-			    this.put("db_username", this.RdmsValue("DB_UserName"));
-			    this.put("db_password", this.RdmsValue("DB_Password"));
-			} 
-			catch (Exception e) 
-			{
-			    System.out.println("Error in DBdetails Function -- PropertiesHandle Class");
-				e.printStackTrace();
-			}
+			this.put("jdbc_driver", this.RdmsValue("JDCDriver"));
+			this.put("db_url", this.RdmsValue("DB_URL") + "/" + this.RdmsValue("ProjectDBName") + "_" + this.RdmsValue("UserDBName"));
+			this.put("db_username", this.RdmsValue("DB_UserName"));
+			this.put("db_password", this.RdmsValue("DB_Password"));
 		}	
 		
-		public PropertiesHandle(String path)
+		public PropertiesHandle(String path) throws PropertiesHandleException
 		{
 			this.path = path;
 			
@@ -527,34 +322,36 @@ public class PropertiesHandle extends Properties
 			} 
 			catch (FileNotFoundException e) 
 			{
-				System.out.println("file not found");
-				e.printStackTrace();
+				throw new PropertiesHandleException("CONFIGURATION FILE PATH DOES NOT CONTAINS CONFIG FILE", e);
 			}
 			try 
 			{
 				this.load(configuration);
-			} catch (IOException e) 
+			} 
+			catch (IOException e) 
 			{
-				e.printStackTrace();
+				throw new PropertiesHandleException("ERROR IN LOADING A CONFIG FILE", e);
 			}
 		}
 		
-		public void store(String newpath)
+		public void store(String newpath) throws PropertiesHandleException
 		{
 			Writer writer = null;
 			try 
 			{
 				 writer = new FileWriter(newpath);
-			} catch (IOException e) 
+			} 
+			catch (IOException e) 
 			{
-				e.printStackTrace();
+				throw new PropertiesHandleException("ERROR IN WRITING A CONFIG FILE", e);
 			}
 			try 
 			{
 				this.store(writer, "File saved");
-			} catch (IOException e) 
+			} 
+			catch (IOException e) 
 			{
-				e.printStackTrace();
+				throw new PropertiesHandleException("ERROR IN STORING A CONFIG FILE", e);
 			};
 		}
 		

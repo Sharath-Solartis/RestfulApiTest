@@ -1,4 +1,4 @@
-package com.solartis.test.apiPackage.StarrISOBOP;
+package com.solartis.test.apiPackage.StarrGL;
 
 import com.solartis.test.Configuration.PropertiesHandle;
 import com.solartis.test.apiPackage.API;
@@ -14,10 +14,10 @@ import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.api.HttpHandle;
 import com.solartis.test.util.common.DatabaseOperation;
 
-public class IsoBoprating extends BaseClass implements API
+public class StarrGLRate extends BaseClass implements API
 {
 	MacroInterface macro = null;
-	public IsoBoprating(PropertiesHandle config) throws APIException
+	public StarrGLRate(PropertiesHandle config) throws APIException
 	{
 	    try
 	    {
@@ -34,7 +34,7 @@ public class IsoBoprating extends BaseClass implements API
 	    }
 	    catch(MacroException e)
 	    {
-	    	throw new APIException("ERROR INITATING MACRO- ISO CLASS", e);
+	    	throw new APIException("ERROR INITATING MACRO- GL CLASS", e);
 	    }
 		
 	}
@@ -47,10 +47,11 @@ public class IsoBoprating extends BaseClass implements API
 			http.AddHeader("Content-Type", config.getProperty("content_type"));
 			http.AddHeader("Token", config.getProperty("token"));
 			http.AddHeader("EventName", config.getProperty("EventName"));
+			http.AddHeader("EventVersion", config.getProperty("EventVersion"));
 		}
     	catch (HTTPHandleException e) 
 		{
-			throw new APIException("ERROR ADD HEADER FUNCTION -- ISO-RATING CLASS", e);
+			throw new APIException("ERROR ADD HEADER FUNCTION -- GL-RATING CLASS", e);
 		}
 	}
 	
@@ -64,7 +65,7 @@ public class IsoBoprating extends BaseClass implements API
 				macro.GenerateExpected(InputData, config);
 			} catch (MacroException e) 
 			{
-				throw new APIException("ERROR LoadSampleRequest FUNCTION -- ISO-RATING CLASS", e);
+				throw new APIException("ERROR LoadSampleRequest FUNCTION -- GL-RATING CLASS", e);
 			}
 		}
 		super.LoadSampleRequest(InputData);
@@ -80,7 +81,7 @@ public class IsoBoprating extends BaseClass implements API
 			} 
 			catch (DatabaseException | POIException | MacroException e) 
 			{
-				throw new APIException("ERROR PumpDataToRequest FUNCTION -- ISO-RATING CLASS", e);
+				throw new APIException("ERROR PumpDataToRequest FUNCTION -- GL-RATING CLASS", e);
 			}
 		}
 		super.PumpDataToRequest();
@@ -96,11 +97,10 @@ public class IsoBoprating extends BaseClass implements API
 			} 
 			catch (POIException | MacroException | DatabaseException e) 
 			{
-				throw new APIException("ERROR SendResponseDataToFile FUNCTION -- ISO-RATING CLASS", e);
+				throw new APIException("ERROR SendResponseDataToFile FUNCTION -- GL-RATING CLASS", e);
 			}
 		}
 		super.SendResponseDataToFile(output);
 		return output;		
 	}
-	
 }

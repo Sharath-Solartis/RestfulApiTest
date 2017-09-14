@@ -9,16 +9,15 @@ import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import jxl.read.biff.BiffException;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
+
+import com.solartis.test.exception.POIException;
 
 public class ExcelOperationsPOI 
 {
@@ -32,7 +31,7 @@ public class ExcelOperationsPOI
 	protected int column_number;
 	
 	
-	public ExcelOperationsPOI(String path)
+	public ExcelOperationsPOI(String path) throws POIException
 	{
 		 try 
 		 {
@@ -42,11 +41,11 @@ public class ExcelOperationsPOI
 		 } 
 		 catch (IOException e) 
 		 {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("error in opening excel");
+			 throw new POIException("ERROR OCCURS IN RATING MODEL FILE PATH -- " + path, e);
 		}
 	}
-	public void openWorkbook()
+	public void openWorkbook() throws POIException
 	{
 		try 
 		 {
@@ -55,9 +54,8 @@ public class ExcelOperationsPOI
 		 } 
 		 catch (IOException e) 
 		 {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			 throw new POIException("ERROR OCCURS WHILE OPENING THE WORKBOOK", e);
+		 }
 	}
 	
 	public void getsheets(String sheet_name)
@@ -76,7 +74,7 @@ public class ExcelOperationsPOI
 	}
 	
 	@SuppressWarnings("deprecation")
-	public String read_data()
+	public String read_data() throws POIException
 	{
 		String cellvalue=null;
 		if(workbook == null)
@@ -102,7 +100,7 @@ public class ExcelOperationsPOI
 				break;
 			case Cell.CELL_TYPE_STRING	:		cellvalue= cell.getStringCellValue();					break;
 			case Cell.CELL_TYPE_ERROR	:		cellvalue= String.valueOf(cell.getErrorCellValue());	break;
-			case Cell.CELL_TYPE_BLANK	:		cellvalue="Blank";	break;
+			case Cell.CELL_TYPE_BLANK	:		cellvalue="";	break;
 			case 2                      :   try{
 								                	cellvalue =String.valueOf(cell.getNumericCellValue()); 
 								                } 
@@ -117,7 +115,7 @@ public class ExcelOperationsPOI
 	}
 	
 	@SuppressWarnings("deprecation")
-	public String read_data(int rowNumber, int columnNumber)
+	public String read_data(int rowNumber, int columnNumber) throws POIException
 	{
 		String cellvalue=null;
 		if(workbook == null)
@@ -126,7 +124,6 @@ public class ExcelOperationsPOI
 			worksheet = (HSSFSheet) this.workbook.getSheet(this.sheet_name);
 		}
 		cell = this.worksheet.getRow(rowNumber).getCell(columnNumber);
-		System.out.println(this.cell.getCellType());
 		FormulaEvaluator evaluator = this.workbook.getCreationHelper().createFormulaEvaluator();		
 		evaluator.clearAllCachedResultValues();
 		//CellValue cellvalue1 =evaluator.evaluate(cell);
@@ -148,7 +145,7 @@ public class ExcelOperationsPOI
 											break;
 			case Cell.CELL_TYPE_STRING	:	cellvalue= cell.getStringCellValue();						break;
 			case Cell.CELL_TYPE_ERROR	:	cellvalue= String.valueOf(cell.getErrorCellValue())+"err";	break;//String.valueOf(cell.getErrorCellValue());
-			case Cell.CELL_TYPE_BLANK	:	cellvalue="Blank";break;
+			case Cell.CELL_TYPE_BLANK	:	cellvalue="";break;
 			case Cell.CELL_TYPE_FORMULA :   
 											switch(cell.getCachedFormulaResultType())
 											{
@@ -171,7 +168,7 @@ public class ExcelOperationsPOI
 									            case Cell.CELL_TYPE_ERROR:
 									            	cellvalue= String.valueOf(cell.getErrorCellValue())+"err";
 									            	break;
-									            case Cell.CELL_TYPE_BLANK	:	cellvalue="Blank";break;
+									            case Cell.CELL_TYPE_BLANK	:	cellvalue="";break;
 									            case Cell.CELL_TYPE_BOOLEAN	:	cellvalue= String.valueOf(cell.getBooleanCellValue());		break;
 											}
 				                            break;
@@ -299,18 +296,12 @@ public class ExcelOperationsPOI
 		}
 	}
 	
-	/*public void write_data(int rownum,int columnnum,String strData)
-	{
-		
-		 cell = this.worksheet.getRow(rownum).getCell(columnnum);
-		 cell.setCellValue(strData);	
-	}*/
 	public void refresh()
 	{
 		 HSSFFormulaEvaluator.evaluateAllFormulaCells(this.workbook);
 	}
 	
-	public void save()
+	public void save() throws POIException
 	{
 		try 
 		{	
@@ -322,14 +313,13 @@ public class ExcelOperationsPOI
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new POIException("ERROR OCCURS WHILE SAVING THE WORKBOOK", e);
 		}
 	
 		
 	}
 
-	public void saveAs(String Targetexpectedpath)
+	public void saveAs(String Targetexpectedpath) throws POIException
 	{
 		try 
 		{	
@@ -340,14 +330,14 @@ public class ExcelOperationsPOI
 		} 
 		catch (IOException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new POIException("ERROR OCCURS WHILE SAVE AS THE WORKBOOK IN DIFFERENT NAME", e);
 		}
 	
 		
 	}
 	
-	public void Copy(String Sampleexcelpath, String Targetexpectedpath) throws BiffException, IOException
+	@SuppressWarnings("resource")
+	public void Copy(String Sampleexcelpath, String Targetexpectedpath) throws POIException
 	{
 		FileChannel source = null;
 		FileChannel destination = null;
@@ -368,11 +358,11 @@ public class ExcelOperationsPOI
 		
 		catch (FileNotFoundException e) 
 		{
-			e.printStackTrace();
+			throw new POIException("ERROR OCCURS WHILE COPYING THE WORKBOOK -- FILENOTFOUND", e);
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			throw new POIException("ERROR OCCURS WHILE COPYING THE WORKBOOK -- I/O OPERATION FAILED", e);
 		
 		}
 		finally 
@@ -403,23 +393,7 @@ public class ExcelOperationsPOI
 		this.workbook.setSheetName(sheetindex, newsheetnamee);
 		
 	}
-	public static ExcelOperationsPOI excel = null;
-	public static void main(String args[]) throws BiffException, IOException
-	{
-		String path = "E:/RestFullAPIDeliverable/Devolpement/admin/CoverWallet/Rating/RatingModelResult/phase1_rel1_8.xls";
-		 excel = new ExcelOperationsPOI(path);
-		excel.getsheets("Individual PA Rater");
-		excel.getcell(28, 5);
-		System.out.println(excel.read_data());
-		//excel.write_data(6, 11,"poya");
-		//excel.write_data(7, 11,"poya");
-		System.out.println(excel.read_data());
-		excel.save();
-		//excel.getcell(6, 11);
-		//System.out.println(excel.read_data());
-		//excel.Copy("E:/RestFullAPIDeliverable/Devolpement/admin/CoverWallet/Rating/RatingModelResult/phase1_rel1_4.xls");
-		
-	}
+	
 }
 
 

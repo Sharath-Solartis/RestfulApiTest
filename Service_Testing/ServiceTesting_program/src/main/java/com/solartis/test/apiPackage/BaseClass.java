@@ -1,16 +1,12 @@
 package com.solartis.test.apiPackage;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.sql.SQLException;
-
-import jxl.read.biff.BiffException;
-
-import org.dom4j.DocumentException;
-import org.json.simple.parser.ParseException;
-
+import java.util.ArrayList;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.solartis.test.Configuration.PropertiesHandle;
+import com.solartis.test.exception.APIException;
+import com.solartis.test.exception.DatabaseException;
+import com.solartis.test.exception.HTTPHandleException;
+import com.solartis.test.exception.RequestFormatException;
 import com.solartis.test.util.api.*;
 import com.solartis.test.util.common.*;
 
@@ -28,154 +24,184 @@ public class BaseClass
 	protected DBColoumnVerify InputColVerify = null;
 	protected DBColoumnVerify OutputColVerify = null;
 	protected DBColoumnVerify StatusColVerify = null;
+	protected ArrayList<String> errorParentname = new ArrayList<String>();
+	protected ArrayList<String> errorMessage=new ArrayList<String>();
+	
+	
 	
 //---------------------------------------------------------------LOAD SAMPLE REQUEST--------------------------------------------------------------------	
-	public void LoadSampleRequest(DatabaseOperation InputData) throws SQLException, BiffException, IOException
+	public void LoadSampleRequest(DatabaseOperation InputData) throws APIException
 	{
 		this.input = InputData;
 		sampleInput = new JsonHandle(config.getProperty("sample_request") + "request.json");
 	}
 
 //-----------------------------------------------------------PUMPING TEST DATA TO REQUEST--------------------------------------------------------------- 	
-	public void PumpDataToRequest() throws SQLException, IOException, DocumentException, ParseException, ClassNotFoundException,NumberFormatException, java.text.ParseException, BiffException 
+	public void PumpDataToRequest() throws APIException 
 	{
-		InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
-		request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+".json");
-		request.StringToFile(sampleInput.FileToString());
-		
-		do
+		try
 		{
-			if(InputColVerify.DbCol(input) && (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+			InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
+			request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+".json");
+			request.StringToFile(sampleInput.FileToString());
+			
+			do
 			{
-				if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+				if(InputColVerify.DbCol(input) && (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
-
-					request.write(InputColVerify.ReadData(config.getProperty("InputJsonPath")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
-				}
-			}	
-		}while(InputColVerify.MoveForward());
-		
-		
+					if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
+					{
+	
+						request.write(InputColVerify.ReadData(config.getProperty("InputJsonPath")), input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))));
+					}
+				}	
+			}while(InputColVerify.MoveForward());
+		}
+		catch(DatabaseException | RequestFormatException  e)
+		{
+			throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- BASE CLASS", e);
+		}
 	}
 
 //------------------------------------------------------------CONVERTING REQUEST TO STRING--------------------------------------------------------------	
-	public String RequestToString() throws IOException, ParseException, DocumentException
+	public String RequestToString() throws APIException
 	{
-		return request.FileToString();
+	  try 
+	  {
+		  return request.FileToString();
+	  } 
+	  catch (RequestFormatException e)
+	  {
+		  throw new APIException("ERROR OCCURS IN REQUEST TO STRING FUNCTION -- BASE CLASS", e);
+	   }
 	}
 	
 //-------------------------------------------------------------ADDING HEADER || TOKENS------------------------------------------------------------------	
-	public void AddHeaders() throws IOException
+	public void AddHeaders() throws APIException
 	{
-		http = new HttpHandle(config.getProperty("test_url"),"POST");
-		http.AddHeader("Content-Type", config.getProperty("content_type"));
-		http.AddHeader("Token", config.getProperty("token"));
+		try
+		{
+			http = new HttpHandle(config.getProperty("test_url"),"POST");
+			http.AddHeader("Content-Type", config.getProperty("content_type"));
+			http.AddHeader("Token", config.getProperty("token"));
+		}
+		catch(HTTPHandleException e)
+		{
+			throw new APIException("ERROR ADD HEADER FUNCTION -- BASE CLASS", e);
+		}
 	}
 
 //------------------------------------------------------------STORING RESPONSE TO FOLDER----------------------------------------------------------------	
-	public void SendAndReceiveData() throws SQLException
+	public void SendAndReceiveData() throws APIException 
 	{
-		String input_data= null;
-		try 
+		try
 		{
+			String input_data= null;
 			input_data = request.FileToString();
-		} 
-		catch (IOException | ParseException | DocumentException e) 
-		{
-			e.printStackTrace();
-		}
-		try 
-		{
-			http.SendData(input_data);
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-		
-		String response_string = null;
-		
-		try 
-		{
-			response_string = http.ReceiveData();
-		} 
-		catch (Exception e) 
-		{
-			
-			e.printStackTrace();
-		}
-		response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+".json");
-		try 
-		{
+		    http.SendData(input_data);
+			String response_string = http.ReceiveData();	
+			response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+".json");
 			response.StringToFile(response_string);
-		} 
-		catch (IOException | DocumentException e) 
+		}
+		catch(RequestFormatException | HTTPHandleException | DatabaseException e)
 		{
-			e.printStackTrace();
+			throw new APIException("ERROR IN SEND AND RECIEVE DATA FUNCTION -- BASE CLASS", e);
 		}
 	}
 	
 //-------------------------------------------------------------CONVERTING RESPONSE TO STRING------------------------------------------------------------
-	public String ResponseToString() throws IOException, ParseException, DocumentException
+	public String ResponseToString() throws APIException 
 	{
-		return response.FileToString();
+		try
+		{
+			return response.FileToString();
+		}
+		catch(RequestFormatException e)
+		{
+			throw new APIException("ERROR IN RESPONSE TO STRING FUNCTION -- BASE CLASS", e);
+		}
 	}
 	
 //-----------------------------------------------------------UPDATING RESPONSE DATA TO DATABASE---------------------------------------------------------	
-	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws UnsupportedEncodingException, IOException, ParseException, DocumentException, SQLException, ClassNotFoundException,NumberFormatException, java.text.ParseException
+	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws APIException
 	{
-		this.output=output;
-		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
-		do 	
+		try
 		{
-		  if(OutputColVerify.DbCol(input) && (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+			this.output=output;
+			OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
+			do 	
 			{
-			try
+			  if(OutputColVerify.DbCol(input) && (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
-				System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
-				String actual = (response.read(OutputColVerify.ReadData(config.getProperty("OutputJsonPath"))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
-				output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
-				System.out.println(actual);
-				output.WriteData("flag_for_execution", "Completed");
+				try
+					{
+					System.out.println(OutputColVerify.ReadData(config.getProperty("OutputColumn")));
+					String actual = (response.read(OutputColVerify.ReadData(config.getProperty("OutputJsonPath"))).replaceAll("\\[\"", "")).replaceAll("\"\\]", "").replaceAll("\\\\","");
+					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), actual);
+					System.out.println(actual);
+					output.WriteData("flag_for_execution", "Completed");
+					}
+					catch(PathNotFoundException e)
+					{
+						output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
+					}
 				}
-				catch(PathNotFoundException e)
-				{
-					output.WriteData(OutputColVerify.ReadData(config.getProperty("OutputColumn")), "Path not Found");
-				}
-			}
-		}while(OutputColVerify.MoveForward());
-	
+			}while(OutputColVerify.MoveForward());
 		
-	return output;
+			
+			return output;
+		}
+		catch(DatabaseException | RequestFormatException e)
+		{
+			throw new APIException("ERROR IN SEND RESPONSE TO FILE FUNCTION -- BASE CLASS", e);
+		}
 	}
 
 //---------------------------------------------------------------COMAPRISION FUNCTION-------------------------------------------------------------------	
-	public DatabaseOperation CompareFunction(DatabaseOperation output) throws SQLException, ClassNotFoundException
+	public DatabaseOperation CompareFunction(DatabaseOperation output) throws APIException
 	{		
-		StatusColVerify.GetDataObjects(config.getProperty("OutputColQuery"));
-		do 	
-		{	
-		  if(StatusColVerify.DbCol(input) && (StatusColVerify.ReadData("Comaparision_Flag").equalsIgnoreCase("Y")))
-			{
-				String ExpectedColumn = StatusColVerify.ReadData(config.getProperty("ExpectedColumn"));
-				String ActualColumn = StatusColVerify.ReadData(config.getProperty("OutputColumn"));
-				String StatusColumn = StatusColVerify.ReadData(config.getProperty("StatusColumn"));
-				if(!(StatusColumn.equals("")) && !(ExpectedColumn.equals("")))
+	    try
+	    {
+			StatusColVerify.GetDataObjects(config.getProperty("OutputColQuery"));
+			do 	
+			{	
+			  if(StatusColVerify.DbCol(input) && (StatusColVerify.ReadData("Comaparision_Flag").equalsIgnoreCase("Y")))
 				{
-					if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
+					String ExpectedColumn = StatusColVerify.ReadData(config.getProperty("ExpectedColumn"));
+					String ActualColumn = StatusColVerify.ReadData(config.getProperty("OutputColumn"));
+					String StatusColumn = StatusColVerify.ReadData(config.getProperty("StatusColumn"));
+					if(!(StatusColumn.equals("")) && !(ExpectedColumn.equals("")))
 					{
-						output.WriteData(StatusColumn, "Pass");
+						if(premium_comp(output.ReadData(ExpectedColumn),output.ReadData(ActualColumn)))
+						{
+							output.WriteData(StatusColumn, "Pass");
+						}
+						else
+						{
+							output.WriteData(StatusColumn, "Fail");
+							output.UpdateRow();
+							analyse(StatusColVerify,output);
+						}
 					}
-					else
-					{
-						output.WriteData(StatusColumn, "Fail");
-					}
+					
 				}
-				
+			 }while(StatusColVerify.MoveForward());
+			
+			String message = "";
+			for(int i=0;i<errorMessage.size();i++)
+			{
+				message=message+errorMessage.get(i)+"; ";
 			}
-		 }while(StatusColVerify.MoveForward());
-
-	return output;
+			output.WriteData("AnalyserResult", message);
+			errorMessage.clear();
+			errorParentname.clear();
+			return output;
+	    }
+	    catch(DatabaseException e)
+	    {
+	    	System.out.println(e);
+	    	throw new APIException("ERROR IN DB COMPARISON FUNCTION -- BASE CLASS", e);
+	    }
 	}
 	
 //-----------------------------------------------------PRIVATE FUNCTION FOR SUPPORTING COMPARISON FUNCTION---------------------------------------------------	
@@ -183,16 +209,16 @@ public class BaseClass
 	{
 		
 		boolean status = false;
-		if(actual == null)
+		if(actual == null||actual.equals(""))
 		{
-			if((expected.equals("")||expected.equals("0")))
+			if((expected == null || expected.equals("")||expected.equals("0") || expected.equals("0.0")))
 			{
 				status = true;
 			}
 		}
-		if(expected == null)
+		if(expected == null||expected.equals(""))
 		{
-			if(actual.equals("")||actual.equals("0"))
+			if(actual == null|| actual.equals("")||actual.equals("0") || actual.equals("0.0"))
 			{
 				status = true;
 			}
@@ -213,6 +239,52 @@ public class BaseClass
 
 		return status;	
 		
+	}
+
+	protected void analyse(DatabaseOperation Conditiontable,DatabaseOperation output ) throws DatabaseException 
+	{		
+		boolean flag = false;
+		if(output.ReadData(Conditiontable.ReadData("StatusColumn")).equals("Pass"))
+		{		
+
+		}
+
+		else if(output.ReadData(Conditiontable.ReadData("StatusColumn")).equals("Fail"))
+		{	
+			String[] Parentname =Conditiontable.ReadData("ParentName").split(";");
+			int noOfParentname=Parentname.length;
+			for(int i=0;i<noOfParentname;i++)
+			{								
+				if(!this.ifexist(Conditiontable.ReadData("NodeName")))
+				{
+					errorParentname.add(Parentname[i]);
+					if(flag == false)
+					{
+						errorMessage.add(Conditiontable.ReadData("Message"));
+						flag = true;
+					}
+				}
+			}
+						
+		}
+
+	}
+
+	protected boolean ifexist (String NodeName)
+	{
+		boolean exist = false;
+		int arraylength =errorParentname.size();
+		for(int i = 0; i<arraylength;i++)
+		{
+			String existParentName =errorParentname.get(i);
+			if(existParentName.equals(NodeName))
+			{
+				exist = true;
+				break;
+			}
+		}
+		return exist;	
+
 	}
 	
 }

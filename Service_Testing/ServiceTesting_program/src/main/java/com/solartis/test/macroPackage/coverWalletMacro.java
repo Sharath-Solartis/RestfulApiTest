@@ -1,7 +1,5 @@
 package com.solartis.test.macroPackage;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -13,11 +11,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.solartis.test.Configuration.PropertiesHandle;
+import com.solartis.test.exception.DatabaseException;
+import com.solartis.test.exception.MacroException;
+import com.solartis.test.exception.POIException;
 import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.common.DatabaseOperation;
 import com.solartis.test.util.common.ExcelOperationsPOI;
-
-import jxl.read.biff.BiffException;
 
 public class coverWalletMacro extends DBColoumnVerify implements MacroInterface
 {	
@@ -46,151 +45,196 @@ public class coverWalletMacro extends DBColoumnVerify implements MacroInterface
 	    }
 	}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	public coverWalletMacro(PropertiesHandle configFile) throws SQLException
+	public coverWalletMacro(PropertiesHandle configFile) throws MacroException
 	{
 		super(" ");
-		configTable = new DatabaseOperation();
-		//configFile = new PropertiesHandle("A:/1 Projects/18 CoverWallet/Rating/configuration_file/config_rating.properties");
-
-		System.out.println(configFile.getProperty("config_query"));
-		configTable.GetDataObjects(configFile.getProperty("config_query"));
+			configTable = new DatabaseOperation();
+			//configFile = new PropertiesHandle("A:/1 Projects/18 CoverWallet/Rating/configuration_file/config_rating.properties");
+		try
+		{
+			configTable.GetDataObjects(configFile.getProperty("config_query"));
+		}
+		catch (DatabaseException e) 
+		{
+			throw new MacroException("ERROR OCCURS INITILIZE THE OBJECT OF  COVERWALLET MACOR", e);
+		}
 		
 	}
-	public void LoadSampleRatingmodel(PropertiesHandle configFile,DatabaseOperation inputData) throws SQLException
+	public void LoadSampleRatingmodel(PropertiesHandle configFile,DatabaseOperation inputData) throws MacroException
 	{
-		String RateingModelName ="coverWallet RatingModel_updated_06_17_2017";
-		
-		Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
-		sampleexcel= new ExcelOperationsPOI(Samplepath);
+		try
+		{
+			String RateingModelName ="coverWallet RatingModel_updated_06_17_2017";
+			
+			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
+			sampleexcel= new ExcelOperationsPOI(Samplepath);
+		}
+		catch (POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE LOADING SAMPLE RATING MODEL OF COVERWALLET MACRO", e);
+		}
 	}
 	
-	public void GenerateExpected(DatabaseOperation inputData,PropertiesHandle configFile) throws SQLException, BiffException, IOException
+	public void GenerateExpected(DatabaseOperation inputData,PropertiesHandle configFile) throws MacroException
 	{
-		
-		Targetpath =  configFile.getProperty("TargetPath")+inputData.ReadData("testdata")+".xls";
-		sampleexcel.Copy(Samplepath, Targetpath);
-		sampleexcel.save();
-		System.out.println("generate expected rating over");
+		try
+		{
+			Targetpath =  configFile.getProperty("TargetPath")+inputData.ReadData("testdata")+".xls";
+			sampleexcel.Copy(Samplepath, Targetpath);
+			sampleexcel.save();
+			System.out.println("generate expected rating over");
+		}
+		catch(DatabaseException | POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE GENERATING THE EXPECTED RATING MODEL OF COVERWALLET MACRO", e);
+		}
 	}
 	
-	public void PumpinData(DatabaseOperation inputData,PropertiesHandle configFile) throws NumberFormatException, BiffException, SQLException, IOException, ParseException
+	public void PumpinData(DatabaseOperation inputData,PropertiesHandle configFile) throws MacroException
 	{
-		
-		//DatabaseOperation configTable = new DatabaseOperation();
-		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
-		trans= new coverWalletMacro(configFile);
-		MacroCondVerify = new DBColoumnVerify("conditionChecking");
-		do
-		{	
-			String condition = configTable.ReadData("Condition");
-			if (configTable.ReadData("flag_for_execution").equalsIgnoreCase("Y") && ConditionReading(condition,inputData))
-			{
-				if (configTable.ReadData("Type").equals("input"))
+		try
+		{
+			//DatabaseOperation configTable = new DatabaseOperation();
+			configTable.GetDataObjects(configFile.getProperty("config_query"));
+			ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
+			trans= new coverWalletMacro(configFile);
+			MacroCondVerify = new DBColoumnVerify("conditionChecking");
+			do
+			{	
+				String condition = configTable.ReadData("Condition");
+				if (configTable.ReadData("flag_for_execution").equalsIgnoreCase("Y") && ConditionReading(condition,inputData))
 				{
-					String Datacolumntowrite = configTable.ReadData("Input_DB_column");
-					String CellAddress = configTable.ReadData("Cell_Address");
-					
-					String  Datatowrite = inputData.ReadData(Datacolumntowrite);
-					String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
-					int columnNum=Alphabet.getNum(part[0].toUpperCase());
-					int rowNum = Integer.parseInt(part[1]);
-					System.out.println(columnNum+"----"+rowNum+"-----"+configTable.ReadData("Sheet_Name")+"-----"+Datatowrite);
-					excel.getsheets(configTable.ReadData("Sheet_Name"));
-					excel.getcell(rowNum, columnNum);
-					
-					if(configTable.ReadData("Translation_Flag").equals("Y"))
+					if (configTable.ReadData("Type").equals("input"))
 					{
-						excel.write_data(rowNum-1, columnNum, trans.Translation1(Datatowrite, configTable, configFile));
-					}
-					else
-					{
-						if(trans.isInteger(Datatowrite))
+						String Datacolumntowrite = configTable.ReadData("Input_DB_column");
+						String CellAddress = configTable.ReadData("Cell_Address");
+						
+						String  Datatowrite = inputData.ReadData(Datacolumntowrite);
+						String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
+						int columnNum=Alphabet.getNum(part[0].toUpperCase());
+						int rowNum = Integer.parseInt(part[1]);
+						System.out.println(columnNum+"----"+rowNum+"-----"+configTable.ReadData("Sheet_Name")+"-----"+Datatowrite);
+						excel.getsheets(configTable.ReadData("Sheet_Name"));
+						excel.getcell(rowNum, columnNum);
+						
+						if(configTable.ReadData("Translation_Flag").equals("Y"))
 						{
-							int intdata =Integer.parseInt(Datatowrite);
-							excel.write_data(rowNum-1, columnNum, intdata);	
-						}
-						else if(trans.isFloat(Datatowrite))
-						{
-							float floatdata = Float.valueOf(Datatowrite);							
-							DecimalFormat df = new DecimalFormat("#.####");
-							String flo = df.format(floatdata);		
-							float floatvalue = Float.valueOf(flo);
-							excel.write_data(rowNum-1, columnNum, floatvalue);
+							excel.write_data(rowNum-1, columnNum, trans.Translation1(Datatowrite, configTable, configFile));
 						}
 						else
 						{
-							excel.write_data(rowNum-1, columnNum, Datatowrite);
+							if(trans.isInteger(Datatowrite))
+							{
+								int intdata =Integer.parseInt(Datatowrite);
+								excel.write_data(rowNum-1, columnNum, intdata);	
+							}
+							else if(trans.isFloat(Datatowrite))
+							{
+								float floatdata = Float.valueOf(Datatowrite);							
+								DecimalFormat df = new DecimalFormat("#.####");
+								String flo = df.format(floatdata);		
+								float floatvalue = Float.valueOf(flo);
+								excel.write_data(rowNum-1, columnNum, floatvalue);
+							}
+							else
+							{
+								excel.write_data(rowNum-1, columnNum, Datatowrite);
+							}
 						}
 					}
 				}
-			}
-		}while(configTable.MoveForward());
-		excel.refresh();
-		excel.save();		
+			}while(configTable.MoveForward());
+			excel.refresh();
+			excel.save();	
+		}
+		catch(DatabaseException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE PUMP-IN THE DATA TO RATING MODEL OF COVERWALLET MACRO", e);
+		}
+		catch(POIException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE OPENING AND CLOSING THE RATING MODEL OF COVERWALLET MACRO", e);
+		} 
 	}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	public void PumpoutData(DatabaseOperation outputData,DatabaseOperation inputData,PropertiesHandle configFile) throws NumberFormatException, SQLException, ParseException 
+	public void PumpoutData(DatabaseOperation outputData,DatabaseOperation inputData,PropertiesHandle configFile) throws MacroException
 	{
-		ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
-		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		excel.refresh();
-		do
+		try
 		{
-			String condition = configTable.ReadData("Condition");
-			if (configTable.ReadData("flag_for_execution").equals("Y")&&ConditionReading(condition,inputData))
+			ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
+			configTable.GetDataObjects(configFile.getProperty("config_query"));
+			excel.refresh();
+			do
 			{
-				if (configTable.ReadData("Type").equals("output"))
+				String condition = configTable.ReadData("Condition");
+				if (configTable.ReadData("flag_for_execution").equals("Y")&&ConditionReading(condition,inputData))
 				{
-					String Datacolumntowrite = configTable.ReadData("Input_DB_column");
-					String CellAddress = configTable.ReadData("Cell_Address");
-					String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
-					int columnNum=Alphabet.getNum(part[0].toUpperCase());
-					int rowNum = Integer.parseInt(part[1]);
-					excel.getsheets(configTable.ReadData("Sheet_Name"));
-					excel.getcell(rowNum-1, columnNum);
-					String Datatowrite = excel.read_data(rowNum-1, columnNum);
-					System.out.println(Datacolumntowrite+"----------" +Datatowrite+"--------"+rowNum+"-------"+columnNum);
-					outputData.WriteData(Datacolumntowrite, Datatowrite);
-					//outputData.WriteData(Datacolumntowrite, "poda");
+					if (configTable.ReadData("Type").equals("output"))
+					{
+						String Datacolumntowrite = configTable.ReadData("Input_DB_column");
+						String CellAddress = configTable.ReadData("Cell_Address");
+						String[] part = CellAddress.split("(?<=\\D)(?=\\d)");
+						int columnNum=Alphabet.getNum(part[0].toUpperCase());
+						int rowNum = Integer.parseInt(part[1]);
+						excel.getsheets(configTable.ReadData("Sheet_Name"));
+						excel.getcell(rowNum-1, columnNum);
+						String Datatowrite = excel.read_data(rowNum-1, columnNum);
+						System.out.println(Datacolumntowrite+"----------" +Datatowrite+"--------"+rowNum+"-------"+columnNum);
+						outputData.WriteData(Datacolumntowrite, Datatowrite);
+						//outputData.WriteData(Datacolumntowrite, "poda");
+					}
 				}
-			}
-			outputData.UpdateRow();
-		}while(configTable.MoveForward());
-		excel.save();
+				outputData.UpdateRow();
+			}while(configTable.MoveForward());
+			excel.save();
+		}
+		catch(DatabaseException e)
+		{
+			throw new MacroException("ERROR OCCURS WHILE PUMPOUT THE OUTPUT FROM RATING MODEL OF COVERWALLET MACRO", e);
+		}
+		catch (POIException e)
+		{
+			throw new MacroException("ERROR OCCURS 	WHILE OPENING/CLOSING THE RATING MODEL OF COVERWALLET MACRO", e);
+		}
+	
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected <T> T Translation1(String Datatowrite, DatabaseOperation configTable,  PropertiesHandle configFile) throws SQLException, ParseException
+	protected <T> T Translation1(String Datatowrite, DatabaseOperation configTable,  PropertiesHandle configFile) throws MacroException
 	{
 		T outputdata = null;
-		switch(configTable.ReadData("Translation_Function"))
+		try
 		{
-		case "Date": 
-			Date DateData = Date(Datatowrite,"yyyy-mm-dd",configTable.ReadData("Translation_Format"));
-			outputdata = (T) DateData;
-			break;
-		case "Lookup":
-			String LookupData = Lookup(Datatowrite, configFile);
-			outputdata = (T) LookupData;
-			break;
-		case "String":
-			String Stringdata = IntegertoString(Datatowrite);
-			outputdata = (T) Stringdata;
-			break;		
-		case "percentage":
-			float percentagedata = percentage(Datatowrite);
-			Float percent = new Float(percentagedata);
-			//System.out.println(percent);
-			outputdata = (T) percent;
+			switch(configTable.ReadData("Translation_Function"))
+			{
+			case "Date": 
+				Date DateData = Date(Datatowrite,"yyyy-mm-dd",configTable.ReadData("Translation_Format"));
+				outputdata = (T) DateData;
+				break;
+			case "Lookup":
+				String LookupData = Lookup(Datatowrite, configFile);
+				outputdata = (T) LookupData;
+				break;
+			case "String":
+				String Stringdata = IntegertoString(Datatowrite);
+				outputdata = (T) Stringdata;
+				break;		
+			case "percentage":
+				float percentagedata = percentage(Datatowrite);
+				Float percent = new Float(percentagedata);
+				outputdata = (T) percent;
+			}
 		}
-		//System.out.println(outputdata.getClass().toString());
+		catch (DatabaseException e)
+		{
+			throw new MacroException("ERROR OCCURS 	IN TRANSLATION OF COVERWALLET MACRO", e);
+		}
 		return outputdata;
 		
 	}
 	
 	
-	protected  Date Date(String Date,String InputFormat,String ExpectedFormat) throws ParseException
+	protected  Date Date(String Date,String InputFormat,String ExpectedFormat) throws MacroException
 	{
 		String value ="";
 		Date Date1=null;
@@ -225,26 +269,40 @@ public class coverWalletMacro extends DBColoumnVerify implements MacroInterface
 		   // System.out.println(value+"\t"+Date1);  						
 		}
 		
-		catch (NumberFormatException e) 
+		catch (NumberFormatException | ParseException e) 
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new MacroException("ERROR OCCURS 	IN DATE FORMAT OF COVERWALLET MACRO", e);
 		}
 		return Date1;
 		
 	}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	protected String  Lookup(String Lookup1, PropertiesHandle configFile) throws SQLException
+	protected String  Lookup(String Lookup1, PropertiesHandle configFile) throws MacroException
 	{
 		DatabaseOperation Lookup = new DatabaseOperation();
-		Lookup.GetDataObjects(configFile.getProperty("lookup_query"));
-		HashMap<String,String> LookupMap = new HashMap<String,String>();
-		do
+		try 
 		{
-			String LookupData=Lookup.ReadData("LookupData");
-			String LookupValue=Lookup.ReadData("LookupValue");
-			LookupMap.put(LookupData, LookupValue);
-		}while(Lookup.MoveForward());
+			Lookup.GetDataObjects(configFile.getProperty("lookup_query"));
+		} 
+		catch (DatabaseException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		HashMap<String,String> LookupMap = new HashMap<String,String>();
+		try 
+		{
+			do
+			{
+				
+				LookupMap.put(Lookup.ReadData("LookupData"), Lookup.ReadData("LookupValue"));
+				
+			}while(Lookup.MoveForward());
+		} 
+		catch (DatabaseException e) 
+		{
+			throw new MacroException("ERROR OCCURS 	IN LOOKUP TABLE OF ISO MACRO", e);
+		}
 		System.out.println(LookupMap.get("new"));
 		if (LookupMap.get(Lookup1)==null)
 		{
@@ -312,45 +370,5 @@ public class coverWalletMacro extends DBColoumnVerify implements MacroInterface
 		 return true;
 	}
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	
-	
-	
-	//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	/*public static void main(String args[]) throws Exception, SQLException
-	{
-		System.setProperty("jsse.enableSNIExtension", "false");	
-		configFile = new propertiesHandle("A:/1 Projects/09 ISO/Release_24_UAT/RatingTrial/configuration_file/config_exp_json.properties");
-	
-		DatabaseOperation inputData = new DatabaseOperation();
-		DatabaseOperation outputData = new DatabaseOperation();
-		DatabaseOperation.ConnectionSetup(configFile);
-		inputData.GetDataObjects(configFile.getProperty("input_query"));
-		outputData.GetDataObjects(configFile.getProperty("output_query"));
-		IsoMacro rating = new IsoMacro();
-		do
-		{			
-			if (inputData.ReadData("Flag_for_execution").equals("Y"))
-			{
-				rating.LoadSampleRatingmodel(configFile, inputData);
-				rating.GenerateExpected(inputData,configFile);
-				rating.PumpinData(inputData,configFile);
-				rating.PumpoutData(configTable,outputData,inputData);
-			}
-			else
-			{
-				//inputData.move_next();
-			}
-			
-		}while (inputData.MoveForward()&& outputData.MoveForward());
-		
-		DatabaseOperation.CloseConn();
-	}*/
-	/*public static void main(String args[]) throws SQLException
-	{
-		coverWalletMacro cw = new coverWalletMacro("");
-		System.out.println(cw.percentage("0.75"));
-		
-	}*/
-	
 	
 }
