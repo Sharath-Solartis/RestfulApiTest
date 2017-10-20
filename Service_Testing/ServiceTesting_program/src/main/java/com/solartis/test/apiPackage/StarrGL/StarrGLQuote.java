@@ -9,21 +9,70 @@ import com.solartis.test.apiPackage.BaseClass;
 import com.solartis.test.exception.APIException;
 import com.solartis.test.exception.DatabaseException;
 import com.solartis.test.exception.HTTPHandleException;
+import com.solartis.test.exception.MacroException;
+import com.solartis.test.exception.POIException;
 import com.solartis.test.exception.RequestFormatException;
+import com.solartis.test.macroPackage.MacroInterface;
+import com.solartis.test.macroPackage.StarrGLMacro;
+import com.solartis.test.macroPackage.StarrGLQuoteMacro;
 import com.solartis.test.util.api.DBColoumnVerify;
 import com.solartis.test.util.api.HttpHandle;
 import com.solartis.test.util.common.*;
 
 public class StarrGLQuote extends BaseClass implements API 
 {
-	public StarrGLQuote(PropertiesHandle config) throws SQLException
+	MacroInterface macro = null;
+	public StarrGLQuote(PropertiesHandle config) throws SQLException, APIException
 	{
-		this.config = config;
-		jsonElements = new DatabaseOperation();
-		
-		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
-		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
-		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
+		try
+			{
+			this.config = config;
+			jsonElements = new DatabaseOperation();
+			
+			InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
+			OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
+			StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
+			if(config.getProperty("status").equals("Y"))
+			{
+				macro=new StarrGLQuoteMacro(config);	
+			}
+		}
+		catch(MacroException e)
+	    {
+	    	throw new APIException("ERROR INITATING MACRO- GL CLASS", e);
+	    }
+	}
+	
+	public void LoadSampleRequest(DatabaseOperation InputData) throws APIException
+	{
+		if(config.getProperty("status").equals("Y"))
+		{
+			try 
+			{
+				macro.LoadSampleRatingmodel(config, InputData);		
+				macro.GenerateExpected(InputData, config);
+			} catch (MacroException e) 
+			{
+				throw new APIException("ERROR LoadSampleRequest FUNCTION -- GL-RATING CLASS", e);
+			}
+		}
+		super.LoadSampleRequest(InputData);
+	}
+	
+	public void PumpDataToRequest() throws  APIException
+	{			
+		if(config.getProperty("status").equals("Y"))
+		{
+			try 
+			{
+				macro.PumpinData(input, config);
+			} 
+			catch (DatabaseException | POIException | MacroException e) 
+			{
+				throw new APIException("ERROR PumpDataToRequest FUNCTION -- GL-RATING CLASS", e);
+			}
+		}
+		super.PumpDataToRequest();
 	}
 	
 	public void AddHeaders() throws APIException

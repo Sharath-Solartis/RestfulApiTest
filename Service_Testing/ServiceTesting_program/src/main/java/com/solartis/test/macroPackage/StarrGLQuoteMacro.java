@@ -16,7 +16,7 @@ import com.solartis.test.exception.POIException;
 import com.solartis.test.util.common.DatabaseOperation;
 import com.solartis.test.util.common.ExcelOperationsPOI;
 
-public class StarrGLMacro implements MacroInterface
+public class StarrGLQuoteMacro implements MacroInterface
 {
 	protected ExcelOperationsPOI sampleexcel=null;
 	protected String Targetpath;
@@ -42,11 +42,11 @@ public class StarrGLMacro implements MacroInterface
 	    }
 	}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-	public StarrGLMacro()
+	public StarrGLQuoteMacro()
 	{
 		
 	}
-	public StarrGLMacro(PropertiesHandle configFile) throws MacroException
+	public StarrGLQuoteMacro(PropertiesHandle configFile) throws MacroException
 	{
 		configTable = new DatabaseOperation();
 		//configFile = new PropertiesHandle("A:/1 Projects/09 StarrGL/Release_24_UAT/RatingTrial/configuration_file/config_json.properties");
@@ -140,7 +140,7 @@ public class StarrGLMacro implements MacroInterface
 					}
 				}
 			}while(configTable.MoveForward());
-			//excel.refresh();
+			excel.refresh();
 			excel.save();
 		}
 		catch(DatabaseException e)
@@ -165,7 +165,7 @@ public class StarrGLMacro implements MacroInterface
 		{
 		ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
 		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		//excel.refresh();
+		excel.refresh();
 		do
 		{
 			
@@ -408,5 +408,4 @@ public class StarrGLMacro implements MacroInterface
 		StarrGLMacro mac = new StarrGLMacro();
 		System.out.println(mac.ReplaceComma("100000"));
 	}
-
 }
