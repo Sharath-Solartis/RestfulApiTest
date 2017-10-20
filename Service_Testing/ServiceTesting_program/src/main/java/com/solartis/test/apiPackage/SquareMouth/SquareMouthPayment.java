@@ -1,4 +1,4 @@
-package com.solartis.test.apiPackage.Dtc;
+package com.solartis.test.apiPackage.SquareMouth;
 
 import com.jayway.jsonpath.PathNotFoundException;
 import com.solartis.test.Configuration.PropertiesHandle;
@@ -11,13 +11,12 @@ import com.solartis.test.exception.RequestFormatException;
 import com.solartis.test.util.api.*;
 import com.solartis.test.util.common.*;
 
-public class DtcSaveDetails1 extends BaseClass implements API 
+public class SquareMouthPayment extends BaseClass implements API 
 {
-	public DtcSaveDetails1(PropertiesHandle config)
+	public SquareMouthPayment(PropertiesHandle config)
 	{
 		this.config = config;
 		jsonElements = new DatabaseOperation();
-		
 		InputColVerify = new DBColoumnVerify(config.getProperty("InputCondColumn"));
 		OutputColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));	
 		StatusColVerify = new DBColoumnVerify(config.getProperty("OutputCondColumn"));
@@ -30,21 +29,35 @@ public class DtcSaveDetails1 extends BaseClass implements API
     	{
 			this.input = InputData;
 			input = InputData;
-				switch(InputData.ReadData("Plan_Type"))
+			System.out.println(config.getProperty("sample_request"));
+				switch(InputData.ReadData("No_of_travelers"))
 				{
-				 case "Annual":			      sampleInput = new JsonHandle(config.getProperty("sample_request")+"First_Save_AnnualPlan.json");
+				 case "1":			   sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_1.json");
 				 									break;
-				 case "Single Trip":			sampleInput = new JsonHandle(config.getProperty("sample_request")+"First save_trip.json");
+				 case "2":			   sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_2.json");
 													break;
-				 case "Renter's Collision": 	sampleInput = new JsonHandle(config.getProperty("sample_request")+"FirstSave_RC.json");
+				 case "3": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_3.json");
 													break; 
-				 
+				 case "4": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_4.json");
+					                                break; 	
+				 case "5": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_5.json");
+                                                   break; 
+				 case "6": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_6.json");
+                                                   break; 
+				 case "7": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_7.json");
+                                                    break; 
+				 case "8": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_8.json");
+                                                    break;                                  
+				 case "9": 	          sampleInput = new JsonHandle(config.getProperty("sample_request")+"Request_9.json");
+                                                     break; 
 				 default:
+					 System.out.println("Invalid Request");
+					 break;
 				}
     	}
 		catch(DatabaseException e)
     	{
-    		throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- DTC-SAVEDETAILS1 CLASS", e);
+    		throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- DTC-SMPayIssue CLASS", e);
     	}
 	}
 	
@@ -54,11 +67,11 @@ public class DtcSaveDetails1 extends BaseClass implements API
 		try
 		{
 			InputColVerify.GetDataObjects(config.getProperty("InputColQuery"));
-			request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("State_code")+"_"+input.ReadData("Plan_type")+".json");
+			request = new JsonHandle(config.getProperty("request_location")+input.ReadData("testdata")+"_request_"+input.ReadData("State_code")+".json");
 			request.StringToFile(sampleInput.FileToString());
 			do
 			{
-				if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+				if(InputColVerify.DbCol(input) && (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
 					if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
 					{
@@ -69,7 +82,7 @@ public class DtcSaveDetails1 extends BaseClass implements API
 		}
 		catch(DatabaseException | RequestFormatException  e)
 		{
-			throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- DTC-SAVEDETAILS1 CLASS", e);
+			throw new APIException("ERROR OCCURS IN PUMPDATATOREQUEST FUNCTION -- DTC-SMPayIssue CLASS", e);
 		}
 	}
 	
@@ -79,6 +92,7 @@ public class DtcSaveDetails1 extends BaseClass implements API
 		try 
 		{
 			http = new HttpHandle(config.getProperty("test_url"),"POST");
+			System.out.println(config.getProperty("test_url")+" "+config.getProperty("content_type")+" "+config.getProperty("token")+ " "+config.getProperty("EventName"));
 			http.AddHeader("Content-Type", config.getProperty("content_type"));
 			http.AddHeader("Token", config.getProperty("token"));
 			http.AddHeader("EventName", config.getProperty("EventName"));
@@ -97,12 +111,12 @@ public class DtcSaveDetails1 extends BaseClass implements API
 			String input_data = request.FileToString();
 			http.SendData(input_data);
 			String response_string = http.ReceiveData();
-			response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response_"+input.ReadData("State_code")+"_"+input.ReadData("Plan_type")+".json");
+			response = new JsonHandle(config.getProperty("response_location")+input.ReadData("testdata")+"_response_"+input.ReadData("State_code")+".json");
 			response.StringToFile(response_string);	
 		}
 		catch(RequestFormatException | HTTPHandleException | DatabaseException e)
 		{
-			throw new APIException("ERROR IN SEND AND RECIEVE DATA FUNCTION -- DTC-SAVEDETAILS1 CLASS", e);
+			throw new APIException("ERROR IN SEND AND RECIEVE DATA FUNCTION -- DTC-SMPayIssue CLASS", e);
 		}
 	}
 	
@@ -110,12 +124,12 @@ public class DtcSaveDetails1 extends BaseClass implements API
 	public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws APIException
 	{
 		try
-		{
+		{this.output=output;
 			OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));
 			String StatusCode=(response.read("..RequestStatus").replaceAll("\\[\"", "")).replaceAll("\"\\]", "");
 			do 	
 			{
-			  if(OutputColVerify.DbCol(input)&&(OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
+			  if(OutputColVerify.DbCol(input)&& (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
 				try
 					{
@@ -151,7 +165,7 @@ public class DtcSaveDetails1 extends BaseClass implements API
 		}
 		catch(DatabaseException | RequestFormatException e)
 		{
-			throw new APIException("ERROR IN SEND RESPONSE TO FILE FUNCTION -- 	DTC-SAVEDETAILS1 CLASS", e);
+			throw new APIException("ERROR IN SEND RESPONSE TO FILE FUNCTION -- 	DTC-SMPayIssue CLASS", e);
 		}
 }
 }

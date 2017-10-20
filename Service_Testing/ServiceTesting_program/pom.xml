@@ -125,6 +125,7 @@
                 </executions>
                 <configuration>
                     <mainClass>com.solartis.test.servicetesting.ServiceTestingProgram.TestEngine</mainClass>
+                    <argLine>-Xmx1024m</argLine>
                     <systemPropertyVariables>
 					            <Project>${Project}</Project>
 		                        <Api>${Api}</Api>

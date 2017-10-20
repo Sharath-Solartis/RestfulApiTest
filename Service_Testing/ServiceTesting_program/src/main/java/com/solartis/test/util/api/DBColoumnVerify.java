@@ -87,6 +87,7 @@ public class DBColoumnVerify extends DatabaseOperation
 								{
 								case "=": if((DataTable.ReadData(cond).equals(individualValue[j])))
 										   {
+												
 												ConditionReading=true;
 											}
 											break;
@@ -103,41 +104,45 @@ public class DBColoumnVerify extends DatabaseOperation
 								case ">": if(Integer.parseInt(DataTable.ReadData(cond)) > Integer.parseInt(individualValue[j]))
 											{
 												ConditionReading=true;
-						 						return ConditionReading;
+						 						
 											}
 											else
 											{
 												ConditionReading=false;
+												return ConditionReading;
 											}
 											break;	
 								case "<": if(Integer.parseInt(DataTable.ReadData(cond)) < Integer.parseInt(individualValue[j]))
 											{
 												ConditionReading=true;
-						 						return ConditionReading;
+						 						
 											}
 											else
 											{
 												ConditionReading=false;
+												return ConditionReading;
 											}
 											break;
 								case ">=": if(Integer.parseInt(DataTable.ReadData(cond)) >= Integer.parseInt(individualValue[j]))
 											{
 												ConditionReading=true;
-						 						return ConditionReading;
+						 						
 											}
 											else
 											{
 												ConditionReading=false;
+												return ConditionReading;
 											}
 											break;
 								case "<=": if(Integer.parseInt(DataTable.ReadData(cond)) <= Integer.parseInt(individualValue[j]))
 											{
 												ConditionReading=true;
-						 						return ConditionReading;
+						 						
 											}
 											else
 											{
 												ConditionReading=false;
+												return ConditionReading;
 											}
 											break;
 								}

@@ -48,7 +48,7 @@ public DatabaseOperation SendResponseDataToFile(DatabaseOperation output) throws
 		OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
 			do 	
 			{
-				if(OutputColVerify.DbCol(input))
+				if(OutputColVerify.DbCol(input) && (OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
 					 try
 				      {	

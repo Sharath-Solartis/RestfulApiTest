@@ -60,7 +60,7 @@ public class DtcSaveDetails4 extends BaseClass implements API
 			
 			do
 			{
-				if(InputColVerify.DbCol(input))
+				if(InputColVerify.DbCol(input)&& (InputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
 					if(!input.ReadData(InputColVerify.ReadData(config.getProperty("InputColumn"))).equals(""))
 					{
@@ -117,7 +117,7 @@ public class DtcSaveDetails4 extends BaseClass implements API
 			OutputColVerify.GetDataObjects(config.getProperty("OutputColQuery"));		
 				do 	
 				{
-				if(OutputColVerify.DbCol(input))
+				if(OutputColVerify.DbCol(input)&&(OutputColVerify.ReadData("Flag").equalsIgnoreCase("Y")))
 				{
 					 try
 				      {	

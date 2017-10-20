@@ -127,19 +127,22 @@ public class JsonHandle implements RequestResponse
 		try 
 		{
 			doc.parse(enable_read());
+			System.out.println(json_path);
 			path = JsonPath.compile(json_path);
-			if(doc.read(path).toString().equals("[]"))
+			/*if(doc.read(path).toString().equals("[]"))
 			{
 				
 				throw new PathNotFoundException("----> path not found in json file");
 				
-			}
+			}*/
 			return doc.read(path).toString();
 			
 		} 
 		
 		
-		catch (PathNotFoundException |RequestFormatException e) 
+		//catch (PathNotFoundException |RequestFormatException e) 
+		catch (RequestFormatException e) 
+		
 		{
 			throw new RequestFormatException("ERROR OCCURS WHILE READING STRING OPERATION", e);
 			
