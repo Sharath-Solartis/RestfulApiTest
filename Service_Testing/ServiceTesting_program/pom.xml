@@ -15,7 +15,13 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
-	
+	<repositories>
+   <repository>
+       <id>AsposeJavaAPI</id>
+       <name>Aspose Java API</name>
+       <url>http://maven.aspose.com/artifactory/simple/ext-release-local/</url>
+   </repository>
+</repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -99,6 +105,12 @@
 		  <artifactId>xmlbeans</artifactId>
 		  <version>2.4.0</version>
      </dependency>
+      <!-- https://mvnrepository.com/artifact/com.aspose/aspose-cells -->
+<dependency>
+    <groupId>com.aspose</groupId>
+    <artifactId>aspose-cells</artifactId>
+    <version>17.10</version>
+</dependency>
   </dependencies>
   
   <build>

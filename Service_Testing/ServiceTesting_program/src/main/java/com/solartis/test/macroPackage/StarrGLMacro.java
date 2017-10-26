@@ -15,16 +15,19 @@ import com.solartis.test.exception.MacroException;
 import com.solartis.test.exception.POIException;
 import com.solartis.test.exception.PropertiesHandleException;
 import com.solartis.test.util.common.DatabaseOperation;
+import com.solartis.test.util.common.ExcelOperationAspose;
+import com.solartis.test.util.common.ExcelOperationInterface;
 import com.solartis.test.util.common.ExcelOperationsPOI;
 
 public class StarrGLMacro implements MacroInterface
 {
-	protected ExcelOperationsPOI sampleexcel=null;
+	protected ExcelOperationInterface sampleexcel=null;
 	protected String Targetpath;
 	protected StarrGLMacro trans;
 	protected String Samplepath;
 	protected DatabaseOperation configTable = null;
 	protected PropertiesHandle configFile;
+	protected ExcelOperationInterface excel;
 	
 	
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,10 +71,10 @@ public class StarrGLMacro implements MacroInterface
 		{
 			String RateingModelName = Lookup("filename",configFile);
 			
-			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xls";
-			sampleexcel= new ExcelOperationsPOI(Samplepath);
+			Samplepath= configFile.getProperty("Samplepath")+RateingModelName+".xlsx";
+			sampleexcel= new ExcelOperationAspose(Samplepath);
 		}
-		catch (POIException e)
+		catch (  Exception e)
 		{
 			throw new MacroException("ERROR OCCURS WHILE LOADING SAMPLE RATING MODEL", e);
 		}
@@ -86,7 +89,7 @@ public class StarrGLMacro implements MacroInterface
 			sampleexcel.save();
 			System.out.println("generate expected rating over");
 		}
-		catch(DatabaseException | POIException e)
+		catch( Exception e)
 		{
 			throw new MacroException("ERROR OCCURS WHILE GENERATING THE EXPECTED RATING MODEL", e);
 		}
@@ -98,7 +101,7 @@ public class StarrGLMacro implements MacroInterface
 		{
 			//DatabaseOperation configTable = new DatabaseOperation();
 			configTable.GetDataObjects(configFile.getProperty("config_query"));
-			ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
+			excel=new ExcelOperationAspose(Targetpath);
 			trans= new StarrGLMacro(configFile);
 			do
 			{								
@@ -142,7 +145,7 @@ public class StarrGLMacro implements MacroInterface
 				}
 			}while(configTable.MoveForward());
 			excel.refresh();
-			excel.save();
+			//excel.save();
 		}
 		catch(DatabaseException e)
 		{
@@ -164,9 +167,9 @@ public class StarrGLMacro implements MacroInterface
 	{
 		try
 		{
-		ExcelOperationsPOI excel=new ExcelOperationsPOI(Targetpath);
+			//ExcelOperationInterface excel=new ExcelOperationAspose(Targetpath);
 		configTable.GetDataObjects(configFile.getProperty("config_query"));
-		excel.refresh();
+		//excel.refresh();
 		do
 		{
 			
