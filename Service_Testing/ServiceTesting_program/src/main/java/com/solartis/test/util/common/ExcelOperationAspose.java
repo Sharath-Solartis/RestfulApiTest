@@ -74,7 +74,7 @@ public class ExcelOperationAspose implements ExcelOperationInterface
 		case com.aspose.cells.CellValueType.IS_NUMERIC:
 			cellvalue=String.valueOf(cell.getIntValue());
 		case com.aspose.cells.CellValueType.IS_STRING:
-			cellvalue=cell.getStringValue();
+			cellvalue=cell.getDisplayStringValue();
 		case com.aspose.cells.CellValueType.IS_UNKNOWN:
 			cellvalue="Err-Unknown";
 		}
@@ -215,4 +215,13 @@ public class ExcelOperationAspose implements ExcelOperationInterface
 		}
 	}
 
+	public static void main (String args[]) throws Exception
+	{
+		ExcelOperationAspose excel = new ExcelOperationAspose("D:\\ftl\\sample\\STARR GL Rating Calculator_FebLCV.xlsx");
+		excel.openWorkbook();
+		excel.getsheets("Cov Calculation");
+		System.out.println(excel.read_data(4, 4)+excel.read_data(3, 3));
+		excel.refresh();
+		excel.save();
+	}
 }
